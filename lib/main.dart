@@ -118,7 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
               margin: EdgeInsets.all(8.0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25.0),
-                color: Color(0xFFFFDDED),
+                color: Color(0xFFFFFFFF),
               ),
             ),
           ],
