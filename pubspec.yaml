@@ -66,6 +66,7 @@ flutter:
       - assets/pill.svg
       - assets/antihistamine.png
       - assets/paracetamol.png
+      - assets/doctor.svg
       
 
   # An image asset can refer to one or more resolution-specific "variants", see
