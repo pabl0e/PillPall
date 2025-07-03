@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -538,48 +539,11 @@ class _Task_WidgetState extends State<Task_Widget> {
         tooltip: 'Add Medication',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(bottom: 15), // Only bottom margin for spacing
-        width: double.infinity, // Ensure full width
-        decoration: BoxDecoration(
-          color: Colors.white,
-          //borderRadius: BorderRadius.vertical(top: Radius.circular(30)), // Only top corners rounded
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 10,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: Icon(Icons.home, color: Colors.deepPurple, size: 30),
-                onPressed: () {},
-                tooltip: 'Home',
-              ),
-              IconButton(
-                icon: Icon(Icons.people, color: Colors.deepPurple, size: 30),
-                onPressed: () {},
-                tooltip: 'People',
-              ),
-              IconButton(
-                icon: Icon(Icons.medication, color: Colors.deepPurple, size: 30),
-                onPressed: () {},
-                tooltip: 'Pills',
-              ),
-              IconButton(
-                icon: Icon(Icons.settings, color: Colors.deepPurple, size: 30),
-                onPressed: () {},
-                tooltip: 'Settings',
-              ),
-            ],
-          ),
-        ),
+      bottomNavigationBar: GlobalHomeBar(
+        selectedIndex: 0, // Set the selected index for highlighting
+        onTap: (index) {
+          // Handle navigation here
+        },
       ),
     );
   }
@@ -617,4 +581,67 @@ Widget Item2(){
       ),
     ),
   );
+}
+
+class GlobalHomeBar extends StatelessWidget {
+  final int selectedIndex;
+  final Function(int) onTap;
+
+  const GlobalHomeBar({
+    Key? key,
+    required this.selectedIndex,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15), // Only bottom margin for spacing
+      width: double.infinity, // Ensure full width
+      decoration: BoxDecoration(
+        color: Colors.white,
+        //borderRadius: BorderRadius.vertical(top: Radius.circular(30)), // Only top corners rounded
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              icon: Icon(Icons.home, color: Colors.deepPurple, size: 30),
+              onPressed: () {},
+              tooltip: 'Home',
+            ),
+            IconButton(
+              icon: SvgPicture.asset(
+                'assets/doctor.svg',
+                height: 30,
+                width: 30,
+                color: Colors.deepPurple,
+              ),
+              onPressed: () {},
+              tooltip: 'Doctor',
+            ),
+            IconButton(
+              icon: Icon(Icons.medication, color: Colors.deepPurple, size: 30),
+              onPressed: () {},
+              tooltip: 'Pills',
+            ),
+            IconButton(
+              icon: Icon(Icons.settings, color: Colors.deepPurple, size: 30),
+              onPressed: () {},
+              tooltip: 'Settings',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
