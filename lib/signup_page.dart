@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pillpall/auth_service.dart';
 import 'package:pillpall/login_page.dart';
 
 class SignupPage extends StatefulWidget {
@@ -9,6 +11,129 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  String errorMessage = '';
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    usernameController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  final authService = AuthService();
+
+  void register() async {
+    setState(() {
+      errorMessage = '';
+    });
+    if (passwordController.text != confirmPasswordController.text) {
+      setState(() {
+        errorMessage =
+            'Passwords do not match. Please make sure both passwords are identical.';
+      });
+      return;
+    }
+
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      setState(() {
+        errorMessage = 'Please fill in all required fields.';
+      });
+      return;
+    }
+
+    if (passwordController.text.length < 6) {
+      setState(() {
+        errorMessage = 'Password must be at least 6 characters long.';
+      });
+      return;
+    }
+    try {
+      await authService.createAccount(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 28),
+                SizedBox(width: 12),
+                Text(
+                  'Success!',
+                  style: TextStyle(
+                    color: Colors.green.shade700,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'Your account has been successfully created! You can now log in with your credentials.',
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.green.shade50,
+                  foregroundColor: Colors.green.shade700,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Continue to Login',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        // Make error messages more user-friendly
+        if (e.code == 'email-already-in-use') {
+          errorMessage =
+              'This email address is already registered. Please use a different email or try logging in.';
+        } else if (e.code == 'weak-password') {
+          errorMessage =
+              'The password is too weak. Please choose a stronger password.';
+        } else if (e.code == 'invalid-email') {
+          errorMessage = 'Please enter a valid email address.';
+        } else if (e.code == 'network-request-failed') {
+          errorMessage =
+              'Network error. Please check your internet connection and try again.';
+        } else {
+          errorMessage = 'Registration failed. Please try again later.';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Registration failed. Please try again later.';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,11 +147,10 @@ class _SignupPageState extends State<SignupPage> {
       ),
       body: SingleChildScrollView(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 40),
-          height: MediaQuery.of(context).size.height - 50,
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
           width: double.infinity,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Column(
                 children: <Widget>[
@@ -38,25 +162,69 @@ class _SignupPageState extends State<SignupPage> {
                       color: Colors.grey[700],
                     ),
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 30),
                 ],
+              ),
+              AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                height: errorMessage.isNotEmpty ? 60 : 0,
+                margin: EdgeInsets.only(bottom: 10),
+                child: errorMessage.isNotEmpty
+                    ? Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red.shade600,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : null,
               ),
               Column(
                 children: <Widget>[
-                  inputFile(label: "Username"),
+                  inputFile(label: "Username", controller: usernameController),
                   SizedBox(height: 20),
-                  inputFile(label: "Email"),
+                  inputFile(label: "Email", controller: emailController),
                   SizedBox(height: 20),
-                  inputFile(label: "Password", obscur: true),
+                  inputFile(
+                    label: "Password",
+                    controller: passwordController,
+                    obscur: true,
+                  ),
                   SizedBox(height: 20),
-                  inputFile(label: "Confirm Passowrd", obscur: true),
+                  inputFile(
+                    label: "Confirm Password",
+                    controller: confirmPasswordController,
+                    obscur: true,
+                  ),
                 ],
               ),
+              SizedBox(height: 30),
               Container(
                 child: MaterialButton(
                   minWidth: double.infinity,
                   height: 60,
-                  onPressed: () {},
+                  onPressed: register,
                   color: Colors.pink[300],
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -72,6 +240,7 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
               ),
+              SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -110,7 +279,11 @@ class _SignupPageState extends State<SignupPage> {
   }
 }
 
-Widget inputFile({label, obscur = false}) {
+Widget inputFile({
+  required String label,
+  bool obscur = false,
+  TextEditingController? controller,
+}) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: <Widget>[
@@ -124,6 +297,7 @@ Widget inputFile({label, obscur = false}) {
       ),
       SizedBox(height: 5),
       TextField(
+        controller: controller,
         obscureText: obscur,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
@@ -136,7 +310,6 @@ Widget inputFile({label, obscur = false}) {
           ),
         ),
       ),
-      // SizedBox(height: 10),
     ],
   );
 }

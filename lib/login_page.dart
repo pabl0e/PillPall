@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
                     padding: EdgeInsets.symmetric(horizontal: 40),
                     child: Column(
                       children: <Widget>[
-                        inputFile(label: "Email", obscur: true),
+                        inputFile(label: "Email"),
                         SizedBox(height: 10),
                         inputFile(label: "Password", obscur: true),
                       ],
@@ -58,16 +58,6 @@ class _LoginPageState extends State<LoginPage> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 40),
                     child: Container(
-                      // padding: EdgeInsets.only(top: 30, left: 3),
-                      // decoration: BoxDecoration(
-                      //   borderRadius: BorderRadius.circular(50),
-                      //   border: Border(
-                      //     bottom: BorderSide(color: Colors.black),
-                      //     top: BorderSide(color: Colors.black),
-                      //     left: BorderSide(color: Colors.black),
-                      //     right: BorderSide(color: Colors.black),
-                      //   ),
-                      // ),
                       child: MaterialButton(
                         minWidth: double.infinity,
                         height: 60,
@@ -88,59 +78,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  // child: Container(
-                  //   padding: EdgeInsets.only(top: 30, left: 3),
-                  //   decoration: BoxDecoration(
-                  //     borderRadius: BorderRadius,
-                  //     circular(50),
-                  //     border: Border(
-                  //       bottom: BorderSide(color: Colors.black),
-                  //       top: BorderSide(color: Colors.black),
-                  //       left: BorderSide(color: Colors.black),
-                  //       right: BorderSide(color: Colors.black),
-                  //     ),
-                  //   ),
-                  // ),
-
-                  // child: Container(
-                  //   padding: EdgeInsets.only(top: 30, left: 3),
-                  //   decoration: BoxDecoration(
-                  //     borderRadius: BorderRadius.circular(50),
-                  //     border: Border(
-                  //       bottom: BorderSide(color: Colors.black),
-                  //       top: BorderSide(color: Colors.black),
-                  //       left: BorderSide(color: Colors.black),
-                  //       right: BorderSide(color: Colors.black),
-                  //     ),
-                  //   ),
-                  //   child: MaterialButton(
-                  //     minWidth: double.infinity,
-                  //     height: 60,
-                  //     onPressed: () {},
-                  //     color: Colors.pink[300],
-                  //     elevation: 0,
-                  //     shape: RoundedRectangleBorder(
-                  //       borderRadius: BorderRadius.circular(50),
-                  //     ),
-                  //     child: Text(
-                  //       "Login",
-                  //       style: TextStyle(
-                  //         fontWeight: FontWeight.w600,
-                  //         color: Colors.white,
-                  //         fontSize: 18,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  //   child: Container(padding: EdgeInsets.only(top: 30, left: 3),
-                  //   decoration:   BoxDecoration(borderRadius: BorderRadius,circular(50),
-                  //   border: Border(
-                  //     bottom: BorderSide(color: Colors.black),
-                  //     top: BorderSide(color: Colors.black),
-                  //     left: BorderSide(color: Colors.black),
-                  //     right: BorderSide(color: Colors.black),
-                  //   ) )
-                  // ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -207,7 +144,6 @@ Widget inputFile({label, obscur = false}) {
           ),
         ),
       ),
-      // SizedBox(height: 10),
     ],
   );
 }
