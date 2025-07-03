@@ -27,8 +27,6 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  final authService = AuthService();
-
   void register() async {
     setState(() {
       errorMessage = '';
@@ -41,7 +39,9 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+    if (emailController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        usernameController.text.isEmpty) {
       setState(() {
         errorMessage = 'Please fill in all required fields.';
       });
@@ -55,10 +55,14 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
     try {
-      await authService.createAccount(
+      await authService.value.createAccount(
         email: emailController.text,
         password: passwordController.text,
       );
+
+      // Set the username
+      await authService.value.updateUsername(username: usernameController.text);
+
       if (mounted) {
         showDialog(
           context: context,
@@ -87,10 +91,10 @@ class _SignupPageState extends State<SignupPage> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => LoginPage()),
-                  );
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(
+                    context,
+                  ).popUntil((route) => route.isFirst); // Go back to AuthLayout
                 },
                 style: TextButton.styleFrom(
                   backgroundColor: Colors.green.shade50,

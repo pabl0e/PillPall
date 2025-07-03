@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pillpall/auth_layout.dart';
 import 'package:pillpall/login_page.dart';
 import 'package:pillpall/signup_page.dart';
 
@@ -30,7 +31,12 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
       ),
-      home: const MyHomePage(title: 'Welcome to PillPall!'),
+      home: const AuthLayout(
+        pageIfNotConnected: MyHomePage(
+          title: 'Welcome to PillPall!',
+          key: ValueKey('welcome_page'),
+        ),
+      ),
     );
   }
 }
