@@ -1,1 +1,0 @@
- D:\\vince\\Projects\\PillPall\\.dart_tool\\flutter_build\\f9db2dad42cd987d2f91c3cf32afa800\\native_assets.json: 
