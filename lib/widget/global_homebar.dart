@@ -1,15 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pillpall/profile_page.dart';
+import 'package:pillpall/widget/doctor_page.dart';
+import 'package:pillpall/widget/landing_page.dart'; // Contains HomePage class
+import 'package:pillpall/widget/task_widget.dart';
 
 class GlobalHomeBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int)? onTap;
 
-  const GlobalHomeBar({
-    Key? key,
-    this.selectedIndex = 0,
-    this.onTap,
-  }) : super(key: key);
+  const GlobalHomeBar({Key? key, this.selectedIndex = 0, this.onTap})
+    : super(key: key);
+
+  void _navigateToPage(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => HomePage()));
+        break;
+      case 1:
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => DoctorPage()));
+        break;
+      case 2:
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => Task_Widget()));
+        break;
+      case 3:
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => ProfilePage()));
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +58,17 @@ class GlobalHomeBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: Icon(Icons.home, color: selectedIndex == 0 ? Colors.deepPurple : Colors.grey, size: 30),
-              onPressed: () => onTap?.call(0),
+              icon: Icon(
+                Icons.home,
+                color: selectedIndex == 0 ? Colors.deepPurple : Colors.grey,
+                size: 30,
+              ),
+              onPressed: () {
+                if (selectedIndex != 0) {
+                  _navigateToPage(context, 0);
+                }
+                onTap?.call(0);
+              },
               tooltip: 'Home',
             ),
             IconButton(
@@ -43,17 +78,40 @@ class GlobalHomeBar extends StatelessWidget {
                 width: 30,
                 color: selectedIndex == 1 ? Colors.deepPurple : Colors.grey,
               ),
-              onPressed: () => onTap?.call(1),
+              onPressed: () {
+                if (selectedIndex != 1) {
+                  _navigateToPage(context, 1);
+                }
+                onTap?.call(1);
+              },
               tooltip: 'Doctor',
             ),
             IconButton(
-              icon: Icon(Icons.medication, color: selectedIndex == 2 ? Colors.deepPurple : Colors.grey, size: 30),
-              onPressed: () => onTap?.call(2),
+              icon: Icon(
+                Icons.medication,
+                color: selectedIndex == 2 ? Colors.deepPurple : Colors.grey,
+                size: 30,
+              ),
+              onPressed: () {
+                if (selectedIndex != 2) {
+                  _navigateToPage(context, 2);
+                }
+                onTap?.call(2);
+              },
               tooltip: 'Pills',
             ),
             IconButton(
-              icon: Icon(Icons.settings, color: selectedIndex == 3 ? Colors.deepPurple : Colors.grey, size: 30),
-              onPressed: () => onTap?.call(3),
+              icon: Icon(
+                Icons.settings,
+                color: selectedIndex == 3 ? Colors.deepPurple : Colors.grey,
+                size: 30,
+              ),
+              onPressed: () {
+                if (selectedIndex != 3) {
+                  _navigateToPage(context, 3);
+                }
+                onTap?.call(3);
+              },
               tooltip: 'Settings',
             ),
           ],

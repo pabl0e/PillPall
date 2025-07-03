@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pillpall/auth_service.dart';
 import 'package:pillpall/login_page.dart';
-import 'package:pillpall/widget/landing_page.dart';
+import 'package:pillpall/widget/task_widget.dart';
 
 class AuthLayout extends StatelessWidget {
   const AuthLayout({super.key, this.pageIfNotConnected});
@@ -23,9 +23,11 @@ class AuthLayout extends StatelessWidget {
                 key: ValueKey('loading'),
                 child: CircularProgressIndicator(),
               );
-            } else if (snapshot.hasData) {
-              widget = const LandingPage(key: ValueKey('landing_page'));
+            } else if (snapshot.hasData && snapshot.data != null) {
+              // User is authenticated
+              widget = const Task_Widget(key: ValueKey('task_widget'));
             } else {
+              // User is not authenticated or account was deleted
               widget = pageIfNotConnected != null
                   ? pageIfNotConnected!
                   : const LoginPage(key: ValueKey('login_page'));

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pillpall/widget/global_homebar.dart';
 
 void main() {
-  runApp(MaterialApp(
-    home: Task_Widget(),
-    debugShowCheckedModeBanner: false,
-  ));
+  runApp(MaterialApp(home: Task_Widget(), debugShowCheckedModeBanner: false));
 }
 
 class Task_Widget extends StatefulWidget {
@@ -106,14 +103,14 @@ class _Task_WidgetState extends State<Task_Widget> {
                           children: [
                             Row(
                               children: [
-                                 Checkbox(
-                                  value: isDone1, 
+                                Checkbox(
+                                  value: isDone1,
                                   onChanged: (value) {
-                                  setState(() {
-                                    isDone1 = !isDone1;
-                                  });
-                                }
-                              ),
+                                    setState(() {
+                                      isDone1 = !isDone1;
+                                    });
+                                  },
+                                ),
                                 Text(
                                   'Drink Water ',
                                   style: TextStyle(
@@ -122,7 +119,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     color: Colors.deepPurple,
                                   ),
                                 ),
-                                
+
                                 SizedBox(width: 8),
                                 Text(
                                   'Today',
@@ -131,10 +128,9 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     color: Colors.deepPurple[700],
                                   ),
                                 ),
-                               
                               ],
                             ),
-                           // SizedBox(height: 10),
+                            // SizedBox(height: 10),
                             Row(
                               children: [
                                 Container(
@@ -147,7 +143,11 @@ class _Task_WidgetState extends State<Task_Widget> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.access_time, size: 12, color: Colors.deepPurple[900]),
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 12,
+                                        color: Colors.deepPurple[900],
+                                      ),
                                       SizedBox(width: 3),
                                       Text(
                                         '8:00 AM',
@@ -196,13 +196,13 @@ class _Task_WidgetState extends State<Task_Widget> {
                             Row(
                               children: [
                                 Checkbox(
-                                  value: isDone2, 
+                                  value: isDone2,
                                   onChanged: (value) {
-                                  setState(() {
-                                    isDone2 = !isDone2;
-                                  });
-                                }
-                              ),
+                                    setState(() {
+                                      isDone2 = !isDone2;
+                                    });
+                                  },
+                                ),
                                 Text(
                                   'Take Antibiotic',
                                   style: TextStyle(
@@ -234,7 +234,11 @@ class _Task_WidgetState extends State<Task_Widget> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.access_time, size: 12, color: Colors.deepPurple[900]),
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 12,
+                                        color: Colors.deepPurple[900],
+                                      ),
                                       SizedBox(width: 5),
                                       Text(
                                         '9:00 PM',
@@ -264,7 +268,8 @@ class _Task_WidgetState extends State<Task_Widget> {
           showDialog(
             context: context,
             builder: (context) {
-              TextEditingController checkboxController = TextEditingController();
+              TextEditingController checkboxController =
+                  TextEditingController();
               TextEditingController itemController = TextEditingController();
               DateTime startDate = DateTime.now();
               DateTime endDate = DateTime.now();
@@ -275,14 +280,20 @@ class _Task_WidgetState extends State<Task_Widget> {
               return StatefulBuilder(
                 builder: (context, setState) {
                   return AlertDialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     contentPadding: EdgeInsets.all(20),
                     content: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           // Calendar Icon
-                          Icon(Icons.calendar_month, size: 32, color: Colors.deepPurple),
+                          Icon(
+                            Icons.calendar_month,
+                            size: 32,
+                            color: Colors.deepPurple,
+                          ),
                           SizedBox(height: 10),
                           // Start/End Date Row
                           Row(
@@ -293,18 +304,26 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     DateTime? picked = await showDatePicker(
                                       context: context,
                                       initialDate: startDate,
-                                      firstDate: DateTime(DateTime.now().year - 1),
-                                      lastDate: DateTime(DateTime.now().year + 2),
+                                      firstDate: DateTime(
+                                        DateTime.now().year - 1,
+                                      ),
+                                      lastDate: DateTime(
+                                        DateTime.now().year + 2,
+                                      ),
                                     );
                                     if (picked != null) {
                                       setState(() {
                                         startDate = picked;
-                                        if (endDate.isBefore(startDate)) endDate = startDate;
+                                        if (endDate.isBefore(startDate))
+                                          endDate = startDate;
                                       });
                                     }
                                   },
                                   child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 8,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Color(0xFFF5F5F5),
                                       borderRadius: BorderRadius.circular(8),
@@ -312,7 +331,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     child: Center(
                                       child: Text(
                                         "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}",
-                                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -324,9 +346,13 @@ class _Task_WidgetState extends State<Task_Widget> {
                                   onTap: () async {
                                     DateTime? picked = await showDatePicker(
                                       context: context,
-                                      initialDate: endDate.isBefore(startDate) ? startDate : endDate,
+                                      initialDate: endDate.isBefore(startDate)
+                                          ? startDate
+                                          : endDate,
                                       firstDate: startDate,
-                                      lastDate: DateTime(DateTime.now().year + 2),
+                                      lastDate: DateTime(
+                                        DateTime.now().year + 2,
+                                      ),
                                     );
                                     if (picked != null) {
                                       setState(() {
@@ -335,7 +361,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     }
                                   },
                                   child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 8,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Color(0xFFF5F5F5),
                                       borderRadius: BorderRadius.circular(8),
@@ -343,7 +372,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     child: Center(
                                       child: Text(
                                         "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}",
-                                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -371,7 +403,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     }
                                   },
                                   child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 8,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Color(0xFFF5F5F5),
                                       borderRadius: BorderRadius.circular(8),
@@ -379,7 +414,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     child: Center(
                                       child: Text(
                                         "Start: ${startTime.format(context)}",
-                                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -387,8 +425,15 @@ class _Task_WidgetState extends State<Task_Widget> {
                               ),
                               // Clock icon in the middle, slightly higher
                               Padding(
-                                padding: const EdgeInsets.only(left: 10, right: 10, top: 6),
-                                child: Icon(Icons.access_time, color: Colors.deepPurple),
+                                padding: const EdgeInsets.only(
+                                  left: 10,
+                                  right: 10,
+                                  top: 6,
+                                ),
+                                child: Icon(
+                                  Icons.access_time,
+                                  color: Colors.deepPurple,
+                                ),
                               ),
                               // End Time
                               Expanded(
@@ -405,7 +450,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     }
                                   },
                                   child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 8,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Color(0xFFF5F5F5),
                                       borderRadius: BorderRadius.circular(8),
@@ -413,7 +461,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                                     child: Center(
                                       child: Text(
                                         "End: ${endTime.format(context)}",
-                                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -435,10 +486,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                           // Add checkbox item
                           Row(
                             children: [
-                              Checkbox(
-                                value: false,
-                                onChanged: null,
-                              ),
+                              Checkbox(value: false, onChanged: null),
                               Expanded(
                                 child: TextField(
                                   controller: checkboxController,
@@ -460,19 +508,22 @@ class _Task_WidgetState extends State<Task_Widget> {
                             ],
                           ),
                           // List of added todos
-                          ...List.generate(todos.length, (i) => Row(
-                            children: [
-                              Checkbox(
-                                value: todosChecked[i],
-                                onChanged: (val) {
-                                  setState(() {
-                                    todosChecked[i] = val ?? false;
-                                  });
-                                },
-                              ),
-                              Expanded(child: Text(todos[i])),
-                            ],
-                          )),
+                          ...List.generate(
+                            todos.length,
+                            (i) => Row(
+                              children: [
+                                Checkbox(
+                                  value: todosChecked[i],
+                                  onChanged: (val) {
+                                    setState(() {
+                                      todosChecked[i] = val ?? false;
+                                    });
+                                  },
+                                ),
+                                Expanded(child: Text(todos[i])),
+                              ],
+                            ),
+                          ),
                           // Add item row
                           Row(
                             children: [
@@ -540,9 +591,9 @@ class _Task_WidgetState extends State<Task_Widget> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 0, // Set the selected index for highlighting
+        selectedIndex: 2, // Pills/Medication page
         onTap: (index) {
-          // Handle navigation here
+          // Navigation is handled by the GlobalHomeBar itself
         },
       ),
     );
@@ -550,98 +601,41 @@ class _Task_WidgetState extends State<Task_Widget> {
 
   String _monthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
 }
 
-Widget Item1(){
+Widget Item1() {
   return Container(
     height: 90,
     width: 80,
     decoration: BoxDecoration(
       color: Colors.white,
-      image:DecorationImage(
-        image: AssetImage('assets/paracetamol.png'),
-      ),
+      image: DecorationImage(image: AssetImage('assets/paracetamol.png')),
     ),
   );
 }
 
-Widget Item2(){
+Widget Item2() {
   return Container(
     height: 90,
     width: 80,
     decoration: BoxDecoration(
       color: Colors.white,
-      image:DecorationImage(
-        image: AssetImage('assets/antihistamine.png'),
-      ),
+      image: DecorationImage(image: AssetImage('assets/antihistamine.png')),
     ),
   );
-}
-
-class GlobalHomeBar extends StatelessWidget {
-  final int selectedIndex;
-  final Function(int) onTap;
-
-  const GlobalHomeBar({
-    Key? key,
-    required this.selectedIndex,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15), // Only bottom margin for spacing
-      width: double.infinity, // Ensure full width
-      decoration: BoxDecoration(
-        color: Colors.white,
-        //borderRadius: BorderRadius.vertical(top: Radius.circular(30)), // Only top corners rounded
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: Icon(Icons.home, color: Colors.deepPurple, size: 30),
-              onPressed: () {},
-              tooltip: 'Home',
-            ),
-            IconButton(
-              icon: SvgPicture.asset(
-                'assets/doctor.svg',
-                height: 30,
-                width: 30,
-                color: Colors.deepPurple,
-              ),
-              onPressed: () {},
-              tooltip: 'Doctor',
-            ),
-            IconButton(
-              icon: Icon(Icons.medication, color: Colors.deepPurple, size: 30),
-              onPressed: () {},
-              tooltip: 'Pills',
-            ),
-            IconButton(
-              icon: Icon(Icons.settings, color: Colors.deepPurple, size: 30),
-              onPressed: () {},
-              tooltip: 'Settings',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

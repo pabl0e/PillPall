@@ -224,17 +224,60 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (confirmed != true) return;
 
+    // Get current password for reauthentication
+    String? currentPassword = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final passwordController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Confirm Password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Please enter your current password to confirm account deletion:',
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(passwordController.text),
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (currentPassword == null || currentPassword.isEmpty) return;
+
     setState(() => _isLoading = true);
 
     try {
       final user = authService.value.currentUser;
-      if (user != null) {
-        await user.delete();
+      if (user != null && user.email != null) {
+        // Use the auth service method which includes proper cleanup
+        await authService.value.deleteAccount(
+          email: user.email!,
+          password: currentPassword,
+        );
 
         if (mounted) {
-          // The AuthLayout will automatically detect the auth state change
-          // and navigate back to the welcome screen
-          // Pop back to the AuthLayout to let it handle the navigation
+          // Navigate back to root to let AuthLayout handle the transition
           Navigator.of(context).popUntil((route) => route.isFirst);
         }
       }

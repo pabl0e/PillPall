@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pillpall/widget/global_homebar.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -29,10 +29,7 @@ class HomePage extends StatelessWidget {
                     SizedBox(width: 8),
                     Text(
                       "- Your medication companion",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                   ],
                 ),
@@ -102,7 +99,11 @@ class HomePage extends StatelessWidget {
                       Column(
                         children: [
                           _buildReminderTile("Paracetamol", "5mg", "8:00 AM"),
-                          _buildReminderTile("Antihistamine", "10mg", "9:00 AM"),
+                          _buildReminderTile(
+                            "Antihistamine",
+                            "10mg",
+                            "9:00 AM",
+                          ),
                         ],
                       ),
                     ],
@@ -118,7 +119,10 @@ class HomePage extends StatelessWidget {
                     child: Text("Add Medication"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
-                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
                       textStyle: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -173,10 +177,7 @@ class HomePage extends StatelessWidget {
               SizedBox(height: 4),
               Text(
                 dosage,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.deepPurple[700],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.deepPurple[700]),
               ),
             ],
           ),
@@ -190,80 +191,11 @@ class HomePage extends StatelessWidget {
               children: [
                 Icon(Icons.access_time, size: 16, color: Colors.white),
                 SizedBox(width: 4),
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
+                Text(time, style: TextStyle(fontSize: 16, color: Colors.white)),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class GlobalHomeBar extends StatelessWidget {
-  final int selectedIndex;
-  final Function(int) onTap;
-
-  const GlobalHomeBar({
-    Key? key,
-    required this.selectedIndex,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15), // Only bottom margin for spacing
-      width: double.infinity, // Ensure full width
-      decoration: BoxDecoration(
-        color: Colors.white,
-        //borderRadius: BorderRadius.vertical(top: Radius.circular(30)), // Only top corners rounded
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: Icon(Icons.home, color: Colors.deepPurple, size: 30),
-              onPressed: () {},
-              tooltip: 'Home',
-            ),
-            IconButton(
-              icon: SvgPicture.asset(
-                'assets/doctor.svg',
-                height: 30,
-                width: 30,
-                color: Colors.deepPurple,
-              ),
-              onPressed: () {},
-              tooltip: 'Doctor',
-            ),
-            IconButton(
-              icon: Icon(Icons.medication, color: Colors.deepPurple, size: 30),
-              onPressed: () {},
-              tooltip: 'Pills',
-            ),
-            IconButton(
-              icon: Icon(Icons.settings, color: Colors.deepPurple, size: 30),
-              onPressed: () {},
-              tooltip: 'Settings',
-            ),
-          ],
-        ),
       ),
     );
   }
