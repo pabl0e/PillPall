@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
                     padding: EdgeInsets.symmetric(horizontal: 40),
                     child: Column(
                       children: <Widget>[
-                        inputFile(label: "Email", obscur: true),
+                        inputFile(label: "Email"),
                         SizedBox(height: 10),
                         inputFile(label: "Password", obscur: true),
                       ],
