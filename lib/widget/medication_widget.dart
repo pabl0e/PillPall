@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Add this import at the top
+import 'package:pillpall/widget/global_homebar.dart';
 
 void main() {
-  runApp(MaterialApp(
-    home: Task_Widget(),
-    debugShowCheckedModeBanner: false,
-  ));
+  runApp(MaterialApp(home: Task_Widget(), debugShowCheckedModeBanner: false));
 }
 
 class Task_Widget extends StatefulWidget {
@@ -127,7 +124,11 @@ class _Task_WidgetState extends State<Task_Widget> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.access_time, size: 15, color: Colors.deepPurple[900]),
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 15,
+                                        color: Colors.deepPurple[900],
+                                      ),
                                       SizedBox(width: 5),
                                       Text(
                                         '8:00 AM',
@@ -207,7 +208,11 @@ class _Task_WidgetState extends State<Task_Widget> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.access_time, size: 15, color: Colors.deepPurple[900]),
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 15,
+                                        color: Colors.deepPurple[900],
+                                      ),
                                       SizedBox(width: 5),
                                       Text(
                                         '9:00 AM',
@@ -253,7 +258,9 @@ class _Task_WidgetState extends State<Task_Widget> {
                         children: [
                           TextField(
                             controller: medController,
-                            decoration: InputDecoration(labelText: 'Medication Name'),
+                            decoration: InputDecoration(
+                              labelText: 'Medication Name',
+                            ),
                           ),
                           TextField(
                             controller: doseController,
@@ -262,7 +269,9 @@ class _Task_WidgetState extends State<Task_Widget> {
                           SizedBox(height: 10),
                           Row(
                             children: [
-                              Text("Date: ${selectedDate.toLocal().toString().split(' ')[0]}"),
+                              Text(
+                                "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+                              ),
                               Spacer(),
                               TextButton(
                                 child: Text('Pick'),
@@ -270,7 +279,9 @@ class _Task_WidgetState extends State<Task_Widget> {
                                   DateTime? picked = await showDatePicker(
                                     context: context,
                                     initialDate: selectedDate,
-                                    firstDate: DateTime(DateTime.now().year - 1),
+                                    firstDate: DateTime(
+                                      DateTime.now().year - 1,
+                                    ),
                                     lastDate: DateTime(DateTime.now().year + 2),
                                   );
                                   if (picked != null) {
@@ -324,15 +335,18 @@ class _Task_WidgetState extends State<Task_Widget> {
             },
           );
         },
-        child: Icon(Icons.add, color: Colors.white), // <-- Set icon color to white
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+        ), // <-- Set icon color to white
         backgroundColor: Colors.deepPurple,
         tooltip: 'Add Medication',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 0, // Set the selected index for highlighting
+        selectedIndex: 2, // Pills/Medication page
         onTap: (index) {
-          // Handle navigation here
+          // Navigation is handled by the GlobalHomeBar itself
         },
       ),
     );
@@ -340,97 +354,41 @@ class _Task_WidgetState extends State<Task_Widget> {
 
   String _monthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
 }
 
-Widget Item1(){
+Widget Item1() {
   return Container(
     height: 90,
     width: 80,
     decoration: BoxDecoration(
       color: Colors.white,
-      image:DecorationImage(
-        image: AssetImage('assets/paracetamol.png'),
-      ),
+      image: DecorationImage(image: AssetImage('assets/paracetamol.png')),
     ),
   );
 }
 
-Widget Item2(){
+Widget Item2() {
   return Container(
     height: 90,
     width: 80,
     decoration: BoxDecoration(
       color: Colors.white,
-      image:DecorationImage(
-        image: AssetImage('assets/antihistamine.png'),
-      ),
+      image: DecorationImage(image: AssetImage('assets/antihistamine.png')),
     ),
   );
-}
-
-class GlobalHomeBar extends StatelessWidget {
-  final int selectedIndex;
-  final Function(int) onTap;
-
-  const GlobalHomeBar({
-    Key? key,
-    required this.selectedIndex,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: Icon(Icons.home, color: selectedIndex == 0 ? Colors.deepPurple : Colors.deepPurple.withOpacity(0.5), size: 30),
-              onPressed: () => onTap(0),
-              tooltip: 'Home',
-            ),
-            IconButton(
-              icon: SvgPicture.asset(
-                'assets/doctor.svg',
-                height: 30,
-                width: 30,
-                color: selectedIndex == 1 ? Colors.deepPurple : Colors.deepPurple.withOpacity(0.5),
-              ),
-              onPressed: () => onTap(1),
-              tooltip: 'Doctor',
-            ),
-            IconButton(
-              icon: Icon(Icons.medication, color: selectedIndex == 2 ? Colors.deepPurple : Colors.deepPurple.withOpacity(0.5), size: 30),
-              onPressed: () => onTap(2),
-              tooltip: 'Pills',
-            ),
-            IconButton(
-              icon: Icon(Icons.settings, color: selectedIndex == 3 ? Colors.deepPurple : Colors.deepPurple.withOpacity(0.5), size: 30),
-              onPressed: () => onTap(3),
-              tooltip: 'Settings',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
