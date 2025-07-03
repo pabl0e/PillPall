@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pillpall/signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,7 +15,10 @@ class _LoginPageState extends State<LoginPage> {
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text(
+          'Login',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
@@ -46,6 +50,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       children: <Widget>[
                         inputFile(label: "Email", obscur: true),
+                        SizedBox(height: 10),
                         inputFile(label: "Password", obscur: true),
                       ],
                     ),
@@ -138,13 +143,30 @@ class _LoginPageState extends State<LoginPage> {
                   // ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text("Don't have an account? "),
+                    children: [
                       Text(
-                        "Sign Up",
+                        "Create an account? ",
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignupPage(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Sign Up",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
