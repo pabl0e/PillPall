@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pillpall/auth_service.dart';
 import 'package:pillpall/login_page.dart';
-import 'package:pillpall/widget/task_widget.dart'; // Adjust the import based on your project structure
+import 'package:pillpall/widget/landing_page.dart';
 
 class AuthLayout extends StatelessWidget {
   const AuthLayout({super.key, this.pageIfNotConnected});
@@ -24,7 +24,7 @@ class AuthLayout extends StatelessWidget {
                 child: CircularProgressIndicator(),
               );
             } else if (snapshot.hasData) {
-              widget = const Task_Widget(key: ValueKey('task_widget'));
+              widget = const LandingPage(key: ValueKey('landing_page'));
             } else {
               widget = pageIfNotConnected != null
                   ? pageIfNotConnected!
