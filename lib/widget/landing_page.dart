@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 
-class HomePage extends StatelessWidget {
+void main() {
+  runApp(MaterialApp(
+    home: HomePage(),
+    debugShowCheckedModeBanner: false,
+  ));
+}
+
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  DateTime _selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +30,6 @@ class HomePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // App Title and Subtitle
                 Row(
                   children: [
                     Text(
@@ -29,106 +43,121 @@ class HomePage extends StatelessWidget {
                     SizedBox(width: 8),
                     Text(
                       "- Your medication companion",
-                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
-                // Calendar Section
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Month",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      // Example: 4x4 grid of days
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: List.generate(16, (i) {
-                          return CircleAvatar(
-                            backgroundColor: Colors.deepPurple,
-                            foregroundColor: Colors.white,
-                            radius: 20,
-                            child: Text(
-                              "${i + 1}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 20),
-                // Medication Reminder Section
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Medication Reminders",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      // Example: List of medication reminders
-                      Column(
-                        children: [
-                          _buildReminderTile("Paracetamol", "5mg", "8:00 AM"),
-                          _buildReminderTile(
-                            "Antihistamine",
-                            "10mg",
-                            "9:00 AM",
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 20),
-                // Add Medication Button
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Action to add medication
-                    },
-                    child: Text("Add Medication"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      textStyle: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 300,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: CalendarDatePicker(
+                        initialDate: _selectedDate,
+                        firstDate: DateTime(DateTime.now().year - 1),
+                        lastDate: DateTime(DateTime.now().year + 2),
+                        onDateChanged: (date) {
+                          setState(() {
+                            _selectedDate = date;
+                          });
+                        },
                       ),
                     ),
                   ),
+                ), // App Title and Subtitle
+
+                SizedBox(height: 20),
+                // Calendar Section
+
+                SizedBox(height: 20),
+                // Scheduled Tasks Section
+                Text(
+                  "Scheduled Tasks",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    // Add Tasks Card
+                    _SquareTaskCard(
+                      label: "Add Tasks",
+                      icon: Icons.add,
+                      onTap: () {
+                        // Action to add tasks
+                      },
+                    ),
+                    SizedBox(width: 16),
+                    // Empty Card 1
+                    _SquareTaskCard(),
+                    SizedBox(width: 16),
+                    // Empty Card 2
+                    _SquareTaskCard(),
+                  ],
+                ),
+                SizedBox(height: 20),
+                // My daily insights Section
+                Text(
+                  "My daily insights",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Another row for symptoms logging
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _SquareTaskCard(
+                      label: "Log your symptoms",
+                      icon: Icons.add,
+                      onTap: () {
+                        // Action to log symptoms
+                      },
+                    ),
+                    SizedBox(width: 16),
+                    _SquareTaskCard(),
+                    SizedBox(width: 16),
+                    _SquareTaskCard(),
+                  ],
+                ),
+                SizedBox(height: 20),
+                // Your Doctor's Contact Details
+                Text(
+                  "Your Doctor's Contact Details",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _SquareTaskCard(
+                      label: "Add Doctor",
+                      icon: Icons.add,
+                      onTap: () {
+                        // Action to add doctor
+                      },
+                    ),
+                    SizedBox(width: 16),
+                    _SquareTaskCard(),
+                    SizedBox(width: 16),
+                    _SquareTaskCard(),
+                  ],
                 ),
               ],
             ),
@@ -177,7 +206,10 @@ class HomePage extends StatelessWidget {
               SizedBox(height: 4),
               Text(
                 dosage,
-                style: TextStyle(fontSize: 16, color: Colors.deepPurple[700]),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.deepPurple[700],
+                ),
               ),
             ],
           ),
@@ -191,11 +223,75 @@ class HomePage extends StatelessWidget {
               children: [
                 Icon(Icons.access_time, size: 16, color: Colors.white),
                 SizedBox(width: 4),
-                Text(time, style: TextStyle(fontSize: 16, color: Colors.white)),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Add this widget below your _HomePageState class (outside of it):
+class _SquareTaskCard extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onTap;
+
+  const _SquareTaskCard({
+    this.label = "",
+    this.icon,
+    this.onTap,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 120,
+          margin: EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: icon != null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 12),
+                      Icon(icon, size: 32, color: Colors.black87),
+                    ],
+                  )
+                : Container(),
+          ),
+        ),
       ),
     );
   }

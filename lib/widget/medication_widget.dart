@@ -237,112 +237,115 @@ class _Task_WidgetState extends State<Task_Widget> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Show a dialog or navigate to a new screen for adding medication
-          showDialog(
-            context: context,
-            builder: (context) {
-              TextEditingController medController = TextEditingController();
-              TextEditingController doseController = TextEditingController();
-              DateTime selectedDate = DateTime.now();
-              TimeOfDay selectedTime = TimeOfDay.now();
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 32.0), // Adjust value as needed
+        child: FloatingActionButton(
+          onPressed: () {
+            // Show a dialog or navigate to a new screen for adding medication
+            showDialog(
+              context: context,
+              builder: (context) {
+                TextEditingController medController = TextEditingController();
+                TextEditingController doseController = TextEditingController();
+                DateTime selectedDate = DateTime.now();
+                TimeOfDay selectedTime = TimeOfDay.now();
 
-              return StatefulBuilder(
-                builder: (context, setState) {
-                  return AlertDialog(
-                    title: Text('Add Medication'),
-                    content: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(
-                            controller: medController,
-                            decoration: InputDecoration(
-                              labelText: 'Medication Name',
+                return StatefulBuilder(
+                  builder: (context, setState) {
+                    return AlertDialog(
+                      title: Text('Add Medication'),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: medController,
+                              decoration: InputDecoration(
+                                labelText: 'Medication Name',
+                              ),
                             ),
-                          ),
-                          TextField(
-                            controller: doseController,
-                            decoration: InputDecoration(labelText: 'Dosage'),
-                          ),
-                          SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Text(
-                                "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
-                              ),
-                              Spacer(),
-                              TextButton(
-                                child: Text('Pick'),
-                                onPressed: () async {
-                                  DateTime? picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: selectedDate,
-                                    firstDate: DateTime(
-                                      DateTime.now().year - 1,
-                                    ),
-                                    lastDate: DateTime(DateTime.now().year + 2),
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      selectedDate = picked;
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text("Time: ${selectedTime.format(context)}"),
-                              Spacer(),
-                              TextButton(
-                                child: Text('Pick'),
-                                onPressed: () async {
-                                  TimeOfDay? picked = await showTimePicker(
-                                    context: context,
-                                    initialTime: selectedTime,
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      selectedTime = picked;
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+                            TextField(
+                              controller: doseController,
+                              decoration: InputDecoration(labelText: 'Dosage'),
+                            ),
+                            SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Text(
+                                  "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+                                ),
+                                Spacer(),
+                                TextButton(
+                                  child: Text('Pick'),
+                                  onPressed: () async {
+                                    DateTime? picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: selectedDate,
+                                      firstDate: DateTime(
+                                        DateTime.now().year - 1,
+                                      ),
+                                      lastDate: DateTime(DateTime.now().year + 2),
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        selectedDate = picked;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text("Time: ${selectedTime.format(context)}"),
+                                Spacer(),
+                                TextButton(
+                                  child: Text('Pick'),
+                                  onPressed: () async {
+                                    TimeOfDay? picked = await showTimePicker(
+                                      context: context,
+                                      initialTime: selectedTime,
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        selectedTime = picked;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    actions: [
-                      TextButton(
-                        child: Text('Cancel'),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      ElevatedButton(
-                        child: Text('Add'),
-                        onPressed: () {
-                          // Handle add logic here
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          );
-        },
-        child: Icon(
-          Icons.add,
-          color: Colors.white,
-        ), // <-- Set icon color to white
-        backgroundColor: Colors.deepPurple,
-        tooltip: 'Add Medication',
+                      actions: [
+                        TextButton(
+                          child: Text('Cancel'),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        ElevatedButton(
+                          child: Text('Add'),
+                          onPressed: () {
+                            // Handle add logic here
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            );
+          },
+          child: Icon(
+            Icons.add,
+            color: Colors.white,
+          ),
+          backgroundColor: Colors.deepPurple,
+          tooltip: 'Add Medication',
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: GlobalHomeBar(
         selectedIndex: 2, // Pills/Medication page
         onTap: (index) {
