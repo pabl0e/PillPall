@@ -16,6 +16,8 @@ class Task_Widget extends StatefulWidget {
 
 class _Task_WidgetState extends State<Task_Widget> {
   DateTime _selectedDate = DateTime.now();
+  bool isDone1 = false;
+  bool isDone2 = false;
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +69,19 @@ class _Task_WidgetState extends State<Task_Widget> {
                   ),
                 ),
                 SizedBox(height: 20),
+                Text(
+                  "Tasks for ${_monthName(_selectedDate.month)} ${_selectedDate.day}, ${_selectedDate.year}",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple[900],
+                  ),
+                ),
+                SizedBox(height: 10),
                 // Paracetamol Card
                 Container(
                   width: double.infinity,
-                  height: 100,
+                  height: 80,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -87,38 +98,47 @@ class _Task_WidgetState extends State<Task_Widget> {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       children: [
-                        Item1(),
-                        SizedBox(width: 15),
+                        //SizedBox(width: 15),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Row(
                               children: [
+                                 Checkbox(
+                                  value: isDone1, 
+                                  onChanged: (value) {
+                                  setState(() {
+                                    isDone1 = !isDone1;
+                                  });
+                                }
+                              ),
                                 Text(
-                                  'Paracetamol',
+                                  'Drink Water ',
                                   style: TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.deepPurple,
                                   ),
                                 ),
+                                
                                 SizedBox(width: 8),
                                 Text(
-                                  '5mg',
+                                  'Today',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     color: Colors.deepPurple[700],
                                   ),
                                 ),
+                               
                               ],
                             ),
-                            SizedBox(height: 10),
+                           // SizedBox(height: 10),
                             Row(
                               children: [
                                 Container(
-                                  width: 90,
-                                  height: 30,
+                                  width: 70,
+                                  height: 20,
                                   decoration: BoxDecoration(
                                     color: Color(0xFFFFDDED),
                                     borderRadius: BorderRadius.circular(20),
@@ -126,12 +146,12 @@ class _Task_WidgetState extends State<Task_Widget> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.access_time, size: 15, color: Colors.deepPurple[900]),
-                                      SizedBox(width: 5),
+                                      Icon(Icons.access_time, size: 12, color: Colors.deepPurple[900]),
+                                      SizedBox(width: 3),
                                       Text(
                                         '8:00 AM',
                                         style: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 10,
                                           color: Colors.deepPurple[900],
                                         ),
                                       ),
@@ -150,7 +170,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                 // Antihistamine Card
                 Container(
                   width: double.infinity,
-                  height: 100,
+                  height: 80,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -167,38 +187,45 @@ class _Task_WidgetState extends State<Task_Widget> {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       children: [
-                        Item2(),
-                        SizedBox(width: 15),
+                        //SizedBox(width: 15),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Row(
                               children: [
+                                Checkbox(
+                                  value: isDone2, 
+                                  onChanged: (value) {
+                                  setState(() {
+                                    isDone2 = !isDone2;
+                                  });
+                                }
+                              ),
                                 Text(
-                                  'Antihistamine',
+                                  'Take Antibiotic',
                                   style: TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.deepPurple,
                                   ),
                                 ),
                                 SizedBox(width: 8),
                                 Text(
-                                  '10mg',
+                                  'Tomorrow',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     color: Colors.deepPurple[700],
                                   ),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 10),
+                            //SizedBox(height: 10),
                             Row(
                               children: [
                                 Container(
-                                  width: 90,
-                                  height: 30,
+                                  width: 70,
+                                  height: 20,
                                   decoration: BoxDecoration(
                                     color: Color(0xFFFFDDED),
                                     borderRadius: BorderRadius.circular(20),
@@ -206,12 +233,12 @@ class _Task_WidgetState extends State<Task_Widget> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.access_time, size: 15, color: Colors.deepPurple[900]),
+                                      Icon(Icons.access_time, size: 12, color: Colors.deepPurple[900]),
                                       SizedBox(width: 5),
                                       Text(
-                                        '9:00 AM',
+                                        '9:00 PM',
                                         style: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 10,
                                           color: Colors.deepPurple[900],
                                         ),
                                       ),
@@ -233,97 +260,280 @@ class _Task_WidgetState extends State<Task_Widget> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Show a dialog or navigate to a new screen for adding medication
           showDialog(
             context: context,
             builder: (context) {
-              TextEditingController medController = TextEditingController();
-              TextEditingController doseController = TextEditingController();
-              DateTime selectedDate = DateTime.now();
-              TimeOfDay selectedTime = TimeOfDay.now();
-
+              TextEditingController checkboxController = TextEditingController();
+              TextEditingController itemController = TextEditingController();
+              DateTime startDate = DateTime.now();
+              DateTime endDate = DateTime.now();
+              TimeOfDay startTime = TimeOfDay.now();
+              TimeOfDay endTime = TimeOfDay.now();
+              List<String> todos = [];
+              List<bool> todosChecked = [];
               return StatefulBuilder(
                 builder: (context, setState) {
                   return AlertDialog(
-                    title: Text('Add Medication'),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    contentPadding: EdgeInsets.all(20),
                     content: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          TextField(
-                            controller: medController,
-                            decoration: InputDecoration(labelText: 'Medication Name'),
+                          // Calendar Icon
+                          Icon(Icons.calendar_month, size: 32, color: Colors.deepPurple),
+                          SizedBox(height: 10),
+                          // Start/End Date Row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    DateTime? picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: startDate,
+                                      firstDate: DateTime(DateTime.now().year - 1),
+                                      lastDate: DateTime(DateTime.now().year + 2),
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        startDate = picked;
+                                        if (endDate.isBefore(startDate)) endDate = startDate;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFF5F5F5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}",
+                                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    DateTime? picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: endDate.isBefore(startDate) ? startDate : endDate,
+                                      firstDate: startDate,
+                                      lastDate: DateTime(DateTime.now().year + 2),
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        endDate = picked;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFF5F5F5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}",
+                                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          TextField(
-                            controller: doseController,
-                            decoration: InputDecoration(labelText: 'Dosage'),
+                          SizedBox(height: 16),
+                          // Start/End Time Row with clock icon in the middle and slightly higher
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Start Time
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    TimeOfDay? picked = await showTimePicker(
+                                      context: context,
+                                      initialTime: startTime,
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        startTime = picked;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFF5F5F5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "Start: ${startTime.format(context)}",
+                                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Clock icon in the middle, slightly higher
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10, right: 10, top: 6),
+                                child: Icon(Icons.access_time, color: Colors.deepPurple),
+                              ),
+                              // End Time
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    TimeOfDay? picked = await showTimePicker(
+                                      context: context,
+                                      initialTime: endTime,
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        endTime = picked;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFF5F5F5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "End: ${endTime.format(context)}",
+                                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Divider(height: 24),
+                          // To Do Section
+                          Text(
+                            "To Do",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.deepPurple[900],
+                            ),
                           ),
                           SizedBox(height: 10),
+                          // Add checkbox item
                           Row(
                             children: [
-                              Text("Date: ${selectedDate.toLocal().toString().split(' ')[0]}"),
-                              Spacer(),
-                              TextButton(
-                                child: Text('Pick'),
-                                onPressed: () async {
-                                  DateTime? picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: selectedDate,
-                                    firstDate: DateTime(DateTime.now().year - 1),
-                                    lastDate: DateTime(DateTime.now().year + 2),
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      selectedDate = picked;
-                                    });
-                                  }
-                                },
+                              Checkbox(
+                                value: false,
+                                onChanged: null,
+                              ),
+                              Expanded(
+                                child: TextField(
+                                  controller: checkboxController,
+                                  decoration: InputDecoration(
+                                    hintText: "Add checkbox...",
+                                    border: InputBorder.none,
+                                  ),
+                                  onSubmitted: (val) {
+                                    if (val.trim().isNotEmpty) {
+                                      setState(() {
+                                        todos.add(val.trim());
+                                        todosChecked.add(false);
+                                        checkboxController.clear();
+                                      });
+                                    }
+                                  },
+                                ),
                               ),
                             ],
                           ),
-                          Row(
+                          // List of added todos
+                          ...List.generate(todos.length, (i) => Row(
                             children: [
-                              Text("Time: ${selectedTime.format(context)}"),
-                              Spacer(),
-                              TextButton(
-                                child: Text('Pick'),
-                                onPressed: () async {
-                                  TimeOfDay? picked = await showTimePicker(
-                                    context: context,
-                                    initialTime: selectedTime,
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      selectedTime = picked;
-                                    });
-                                  }
+                              Checkbox(
+                                value: todosChecked[i],
+                                onChanged: (val) {
+                                  setState(() {
+                                    todosChecked[i] = val ?? false;
+                                  });
                                 },
                               ),
+                              Expanded(child: Text(todos[i])),
                             ],
+                          )),
+                          // Add item row
+                          Row(
+                            children: [
+                              Icon(Icons.add, color: Colors.deepPurple),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  controller: itemController,
+                                  decoration: InputDecoration(
+                                    hintText: "Add item...",
+                                    border: InputBorder.none,
+                                  ),
+                                  onSubmitted: (val) {
+                                    if (val.trim().isNotEmpty) {
+                                      setState(() {
+                                        todos.add(val.trim());
+                                        todosChecked.add(false);
+                                        itemController.clear();
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16),
+                          // Submit button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFFFF69B4),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: Text(
+                                "SUBMIT",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              onPressed: () {
+                                // Handle submit logic here
+                                Navigator.of(context).pop();
+                              },
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    actions: [
-                      TextButton(
-                        child: Text('Cancel'),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      ElevatedButton(
-                        child: Text('Add'),
-                        onPressed: () {
-                          // Handle add logic here
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
                   );
                 },
               );
             },
           );
         },
-        child: Icon(Icons.add, color: Colors.white), // <-- Set icon color to white
+        child: Icon(Icons.add, color: Colors.white),
         backgroundColor: Colors.deepPurple,
         tooltip: 'Add Medication',
       ),
