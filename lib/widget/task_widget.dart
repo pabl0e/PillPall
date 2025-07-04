@@ -134,7 +134,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                             Row(
                               children: [
                                 Container(
-                                  width: 70,
+                                  width: 85,
                                   height: 20,
                                   decoration: BoxDecoration(
                                     color: Color(0xFFFFDDED),
@@ -225,7 +225,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                             Row(
                               children: [
                                 Container(
-                                  width: 70,
+                                  width: 85,
                                   height: 20,
                                   decoration: BoxDecoration(
                                     color: Color(0xFFFFDDED),

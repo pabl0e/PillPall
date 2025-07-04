@@ -4,6 +4,7 @@ import 'package:pillpall/profile_page.dart';
 import 'package:pillpall/widget/doctor_page.dart';
 import 'package:pillpall/widget/landing_page.dart'; // Contains HomePage class
 import 'package:pillpall/widget/task_widget.dart';
+import 'package:pillpall/widget/medication_widget.dart';
 
 class GlobalHomeBar extends StatelessWidget {
   final int selectedIndex;
@@ -30,6 +31,11 @@ class GlobalHomeBar extends StatelessWidget {
         ).push(MaterialPageRoute(builder: (context) => Task_Widget()));
         break;
       case 3:
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => MedicationWidget()));
+        break;
+      case 4:
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (context) => ProfilePage()));
@@ -88,7 +94,7 @@ class GlobalHomeBar extends StatelessWidget {
             ),
             IconButton(
               icon: Icon(
-                Icons.medication,
+                Icons.task, // Task icon
                 color: selectedIndex == 2 ? Colors.deepPurple : Colors.grey,
                 size: 30,
               ),
@@ -98,11 +104,11 @@ class GlobalHomeBar extends StatelessWidget {
                 }
                 onTap?.call(2);
               },
-              tooltip: 'Pills',
+              tooltip: 'Tasks',
             ),
             IconButton(
               icon: Icon(
-                Icons.settings,
+                Icons.medication,
                 color: selectedIndex == 3 ? Colors.deepPurple : Colors.grey,
                 size: 30,
               ),
@@ -111,6 +117,20 @@ class GlobalHomeBar extends StatelessWidget {
                   _navigateToPage(context, 3);
                 }
                 onTap?.call(3);
+              },
+              tooltip: 'Pills',
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.settings,
+                color: selectedIndex == 4 ? Colors.deepPurple : Colors.grey,
+                size: 30,
+              ),
+              onPressed: () {
+                if (selectedIndex != 4) {
+                  _navigateToPage(context, 4);
+                }
+                onTap?.call(4);
               },
               tooltip: 'Settings',
             ),

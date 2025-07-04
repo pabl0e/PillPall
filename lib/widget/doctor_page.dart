@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pillpall/widget/add_doctor.dart'; // Make sure this import is present
-
+import 'package:pillpall/widget/global_homebar.dart';
 class DoctorPage extends StatelessWidget {
   const DoctorPage({super.key});
 
@@ -10,7 +10,7 @@ class DoctorPage extends StatelessWidget {
       backgroundColor: Color(0xFFFFDDED),
       appBar: AppBar(
         title: const Text(
-          'PILL PAL - Your medication companion',
+          'Doctors Directory',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -29,7 +29,7 @@ class DoctorPage extends StatelessWidget {
           children: [
             const SizedBox(height: 8),
             const Center(
-              child: Text(
+              /* child: Text(
                 "DOCTORS",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -37,7 +37,7 @@ class DoctorPage extends StatelessWidget {
                   letterSpacing: 1.2,
                   color: Colors.black87,
                 ),
-              ),
+              ), */
             ),
             const SizedBox(height: 18),
             Row(
@@ -160,6 +160,12 @@ class DoctorPage extends StatelessWidget {
         tooltip: 'Add Doctor',
         child: const Icon(Icons.add, color: Colors.white),
       ),
+       bottomNavigationBar: GlobalHomeBar(
+        selectedIndex: 1, // Set the selected index for highlighting
+        onTap: (index) {
+          // Handle navigation here
+        },
+      ),
     );
   }
 }
@@ -183,7 +189,9 @@ class _HmoChip extends StatelessWidget {
           fontWeight: FontWeight.w600,
           fontSize: 13,
         ),
+        
       ),
+      
     );
   }
 }

@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 
 void main() {
-  runApp(MaterialApp(home: Task_Widget(), debugShowCheckedModeBanner: false));
+  runApp(MaterialApp(
+    home: MedicationWidget(), 
+    debugShowCheckedModeBanner: false));
 }
 
-class Task_Widget extends StatefulWidget {
-  const Task_Widget({super.key});
+class MedicationWidget extends StatefulWidget {
+  const MedicationWidget({super.key});
 
   @override
-  State<Task_Widget> createState() => _Task_WidgetState();
+  State<MedicationWidget> createState() => _MedicationWidget_State();
 }
 
-class _Task_WidgetState extends State<Task_Widget> {
+class _MedicationWidget_State extends State<MedicationWidget> {
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -96,7 +98,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                                 Text(
                                   'Paracetamol',
                                   style: TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.deepPurple,
                                   ),
@@ -105,7 +107,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                                 Text(
                                   '5mg',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 12,
                                     color: Colors.deepPurple[700],
                                   ),
                                 ),
@@ -115,7 +117,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                             Row(
                               children: [
                                 Container(
-                                  width: 90,
+                                  width: 115,
                                   height: 30,
                                   decoration: BoxDecoration(
                                     color: Color(0xFFFFDDED),
@@ -180,16 +182,16 @@ class _Task_WidgetState extends State<Task_Widget> {
                                 Text(
                                   'Antihistamine',
                                   style: TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.deepPurple,
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: 10),
                                 Text(
                                   '10mg',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 12,
                                     color: Colors.deepPurple[700],
                                   ),
                                 ),
@@ -199,7 +201,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                             Row(
                               children: [
                                 Container(
-                                  width: 90,
+                                  width: 115,
                                   height: 30,
                                   decoration: BoxDecoration(
                                     color: Color(0xFFFFDDED),
@@ -347,7 +349,7 @@ class _Task_WidgetState extends State<Task_Widget> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 2, // Pills/Medication page
+        selectedIndex: 3, // Pills/Medication page
         onTap: (index) {
           // Navigation is handled by the GlobalHomeBar itself
         },
