@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 
 void main() {
-  runApp(MaterialApp(home: Task_Widget(), debugShowCheckedModeBanner: false));
+  runApp(MaterialApp(
+    home: MedicationWidget(), 
+    debugShowCheckedModeBanner: false));
 }
 
-class Task_Widget extends StatefulWidget {
-  const Task_Widget({super.key});
+class MedicationWidget extends StatefulWidget {
+  const MedicationWidget({super.key});
 
   @override
-  State<Task_Widget> createState() => _Task_WidgetState();
+  State<MedicationWidget> createState() => _MedicationWidget_State();
 }
 
-class _Task_WidgetState extends State<Task_Widget> {
+class _MedicationWidget_State extends State<MedicationWidget> {
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -96,7 +98,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                                 Text(
                                   'Paracetamol',
                                   style: TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.deepPurple,
                                   ),
@@ -105,7 +107,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                                 Text(
                                   '5mg',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 12,
                                     color: Colors.deepPurple[700],
                                   ),
                                 ),
@@ -115,7 +117,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                             Row(
                               children: [
                                 Container(
-                                  width: 90,
+                                  width: 115,
                                   height: 30,
                                   decoration: BoxDecoration(
                                     color: Color(0xFFFFDDED),
@@ -180,16 +182,16 @@ class _Task_WidgetState extends State<Task_Widget> {
                                 Text(
                                   'Antihistamine',
                                   style: TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.deepPurple,
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: 10),
                                 Text(
                                   '10mg',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 12,
                                     color: Colors.deepPurple[700],
                                   ),
                                 ),
@@ -199,7 +201,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                             Row(
                               children: [
                                 Container(
-                                  width: 90,
+                                  width: 115,
                                   height: 30,
                                   decoration: BoxDecoration(
                                     color: Color(0xFFFFDDED),
@@ -237,114 +239,117 @@ class _Task_WidgetState extends State<Task_Widget> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Show a dialog or navigate to a new screen for adding medication
-          showDialog(
-            context: context,
-            builder: (context) {
-              TextEditingController medController = TextEditingController();
-              TextEditingController doseController = TextEditingController();
-              DateTime selectedDate = DateTime.now();
-              TimeOfDay selectedTime = TimeOfDay.now();
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 32.0), // Adjust value as needed
+        child: FloatingActionButton(
+          onPressed: () {
+            // Show a dialog or navigate to a new screen for adding medication
+            showDialog(
+              context: context,
+              builder: (context) {
+                TextEditingController medController = TextEditingController();
+                TextEditingController doseController = TextEditingController();
+                DateTime selectedDate = DateTime.now();
+                TimeOfDay selectedTime = TimeOfDay.now();
 
-              return StatefulBuilder(
-                builder: (context, setState) {
-                  return AlertDialog(
-                    title: Text('Add Medication'),
-                    content: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(
-                            controller: medController,
-                            decoration: InputDecoration(
-                              labelText: 'Medication Name',
+                return StatefulBuilder(
+                  builder: (context, setState) {
+                    return AlertDialog(
+                      title: Text('Add Medication'),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: medController,
+                              decoration: InputDecoration(
+                                labelText: 'Medication Name',
+                              ),
                             ),
-                          ),
-                          TextField(
-                            controller: doseController,
-                            decoration: InputDecoration(labelText: 'Dosage'),
-                          ),
-                          SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Text(
-                                "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
-                              ),
-                              Spacer(),
-                              TextButton(
-                                child: Text('Pick'),
-                                onPressed: () async {
-                                  DateTime? picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: selectedDate,
-                                    firstDate: DateTime(
-                                      DateTime.now().year - 1,
-                                    ),
-                                    lastDate: DateTime(DateTime.now().year + 2),
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      selectedDate = picked;
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text("Time: ${selectedTime.format(context)}"),
-                              Spacer(),
-                              TextButton(
-                                child: Text('Pick'),
-                                onPressed: () async {
-                                  TimeOfDay? picked = await showTimePicker(
-                                    context: context,
-                                    initialTime: selectedTime,
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      selectedTime = picked;
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+                            TextField(
+                              controller: doseController,
+                              decoration: InputDecoration(labelText: 'Dosage'),
+                            ),
+                            SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Text(
+                                  "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+                                ),
+                                Spacer(),
+                                TextButton(
+                                  child: Text('Pick'),
+                                  onPressed: () async {
+                                    DateTime? picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: selectedDate,
+                                      firstDate: DateTime(
+                                        DateTime.now().year - 1,
+                                      ),
+                                      lastDate: DateTime(DateTime.now().year + 2),
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        selectedDate = picked;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text("Time: ${selectedTime.format(context)}"),
+                                Spacer(),
+                                TextButton(
+                                  child: Text('Pick'),
+                                  onPressed: () async {
+                                    TimeOfDay? picked = await showTimePicker(
+                                      context: context,
+                                      initialTime: selectedTime,
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        selectedTime = picked;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    actions: [
-                      TextButton(
-                        child: Text('Cancel'),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      ElevatedButton(
-                        child: Text('Add'),
-                        onPressed: () {
-                          // Handle add logic here
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          );
-        },
-        child: Icon(
-          Icons.add,
-          color: Colors.white,
-        ), // <-- Set icon color to white
-        backgroundColor: Colors.deepPurple,
-        tooltip: 'Add Medication',
+                      actions: [
+                        TextButton(
+                          child: Text('Cancel'),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        ElevatedButton(
+                          child: Text('Add'),
+                          onPressed: () {
+                            // Handle add logic here
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            );
+          },
+          child: Icon(
+            Icons.add,
+            color: Colors.white,
+          ),
+          backgroundColor: Colors.deepPurple,
+          tooltip: 'Add Medication',
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 2, // Pills/Medication page
+        selectedIndex: 3, // Pills/Medication page
         onTap: (index) {
           // Navigation is handled by the GlobalHomeBar itself
         },
