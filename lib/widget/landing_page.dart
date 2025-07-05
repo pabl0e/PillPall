@@ -4,7 +4,8 @@ import 'package:pillpall/services/doctor_service.dart';
 import 'package:pillpall/widget/doctor_list.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 import 'package:pillpall/widget/symptom_widget.dart';
-import 'package:pillpall/widget/task_widget.dart'; // Import the Task_Widget
+import 'package:pillpall/widget/task_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   runApp(MaterialApp(home: HomePage(), debugShowCheckedModeBanner: false));
@@ -179,7 +180,62 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
-                    // The latest 2 symptoms cards are removed for now
+                    SizedBox(width: 16),
+                    // Latest Symptoms Cards
+                    Expanded(
+                      flex: 2,
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('symptoms')
+                            .orderBy('createdAt', descending: true)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(),
+                              ],
+                            );
+                          }
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(),
+                              ],
+                            );
+                          }
+                          final symptoms = snapshot.data!.docs.take(2).toList();
+                          return Row(
+                            children: List.generate(2, (i) {
+                              if (i < symptoms.length) {
+                                final data = symptoms[i].data() as Map<String, dynamic>;
+                                return Expanded(
+                                  child: _SquareTaskCard(
+                                    label: data['name'] ?? '',
+                                    date: _formatDateWord(data['date']),
+                                    time: _formatTimeAMPM(data['time']),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => SymptomWidget(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              } else {
+                                return Expanded(child: _SquareTaskCard());
+                              }
+                            }),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
                 SizedBox(height: 20),
@@ -204,7 +260,62 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
-                    // The latest 2 doctors cards are removed for now
+                    SizedBox(width: 16),
+                    // Latest Doctors Cards
+                    Expanded(
+                      flex: 2,
+                      child: StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('doctors')
+                            .orderBy('createdAt', descending: true)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(),
+                              ],
+                            );
+                          }
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(),
+                              ],
+                            );
+                          }
+                          final doctors = snapshot.data!.docs.take(2).toList();
+                          return Row(
+                            children: List.generate(2, (i) {
+                              if (i < doctors.length) {
+                                final data = doctors[i].data() as Map<String, dynamic>;
+                                return Expanded(
+                                  child: _SquareTaskCard(
+                                    label: data['name'] ?? '',
+                                    date: data['specialty'] ?? '',
+                                    time: data['phone'] ?? '',
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DoctorListScreen(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              } else {
+                                return Expanded(child: _SquareTaskCard());
+                              }
+                            }),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ],
