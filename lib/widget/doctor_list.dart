@@ -376,6 +376,7 @@ class DoctorCard extends StatelessWidget {
           _showEditDeleteMenu(context);
         },
         child: Container(
+          width: double.infinity, // Ensure full width
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -393,24 +394,100 @@ class DoctorCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                doctor.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      doctor.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  if (doctor.specialties.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${doctor.specialties.length} specialt${doctor.specialties.length == 1 ? 'y' : 'ies'}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.deepPurple.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 4),
-              ...doctor.specialties.map(
-                (specialty) => Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    specialty,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              const SizedBox(height: 8),
+              if (doctor.specialties.isNotEmpty)
+                SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children:
+                        doctor.specialties
+                            .take(3)
+                            .map(
+                              (specialty) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  specialty,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList()
+                          ..addAll(
+                            doctor.specialties.length > 3
+                                ? [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '+${doctor.specialties.length - 3} more',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ]
+                                : [],
+                          ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

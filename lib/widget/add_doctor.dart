@@ -195,8 +195,6 @@ class _AddDoctorPageState extends State<AddDoctorPage> {
                                   email: _emailController.text.trim().isEmpty
                                       ? null
                                       : _emailController.text.trim(),
-                                  address:
-                                      null, // You can add address field if needed
                                 );
 
                                 // Save to Firestore

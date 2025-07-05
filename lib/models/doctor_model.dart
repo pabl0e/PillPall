@@ -8,7 +8,6 @@ class Doctor {
   final String? mobileNumber;
   final String? secretaryNumber;
   final String? email;
-  final String? address;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -20,7 +19,6 @@ class Doctor {
     this.mobileNumber,
     this.secretaryNumber,
     this.email,
-    this.address,
     this.createdAt,
     this.updatedAt,
   });
@@ -34,7 +32,6 @@ class Doctor {
       'mobileNumber': mobileNumber,
       'secretaryNumber': secretaryNumber,
       'email': email,
-      'address': address,
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -51,7 +48,6 @@ class Doctor {
       mobileNumber: data['mobileNumber'],
       secretaryNumber: data['secretaryNumber'],
       email: data['email'],
-      address: data['address'],
       createdAt: data['createdAt']?.toDate(),
       updatedAt: data['updatedAt']?.toDate(),
     );
@@ -67,7 +63,6 @@ class Doctor {
       mobileNumber: map['mobileNumber'],
       secretaryNumber: map['secretaryNumber'],
       email: map['email'],
-      address: map['address'],
       createdAt: map['createdAt']?.toDate(),
       updatedAt: map['updatedAt']?.toDate(),
     );
@@ -82,7 +77,6 @@ class Doctor {
     String? mobileNumber,
     String? secretaryNumber,
     String? email,
-    String? address,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -94,7 +88,6 @@ class Doctor {
       mobileNumber: mobileNumber ?? this.mobileNumber,
       secretaryNumber: secretaryNumber ?? this.secretaryNumber,
       email: email ?? this.email,
-      address: address ?? this.address,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

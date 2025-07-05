@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 
 import '../models/doctor_model.dart';
@@ -21,6 +22,85 @@ class _DoctorPageState extends State<DoctorPage> {
   void initState() {
     super.initState();
     currentDoctor = widget.doctor;
+  }
+
+  // Email validation helper
+  bool _isValidEmail(String email) {
+    if (email.isEmpty) return false;
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(email);
+  }
+
+  // Phone number validation helper
+  bool _isValidPhoneNumber(String phone) {
+    if (phone.isEmpty) return false;
+    // Remove all non-digit characters for validation
+    final cleanPhone = phone.replaceAll(RegExp(r'[^\d]'), '');
+    // Check if it has at least 10 digits (common minimum for phone numbers)
+    return cleanPhone.length >= 10 && cleanPhone.length <= 15;
+  }
+
+  // Safe string getter with validation
+  String _getSafeContactInfo(String? value, String type) {
+    if (value == null || value.trim().isEmpty) {
+      return '';
+    }
+
+    final trimmedValue = value.trim();
+
+    switch (type.toLowerCase()) {
+      case 'email':
+        return _isValidEmail(trimmedValue) ? trimmedValue : '';
+      case 'phone':
+        return _isValidPhoneNumber(trimmedValue) ? trimmedValue : '';
+      default:
+        return trimmedValue;
+    }
+  }
+
+  // HMO accreditations validation
+  List<String> _getValidHmoAccreditations() {
+    if (currentDoctor.hmoAccreditations == null) return [];
+
+    return currentDoctor.hmoAccreditations!
+        .where((hmo) => hmo.trim().isNotEmpty)
+        .map((hmo) => hmo.trim())
+        .toList();
+  }
+
+  // Copy to clipboard with error handling
+  Future<void> _copyToClipboard(String text, String type) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$type copied to clipboard'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to copy $type: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  // Check if any contact info exists (even if invalid)
+  bool _hasAnyContactInfo() {
+    return (currentDoctor.email != null && currentDoctor.email!.isNotEmpty) ||
+        (currentDoctor.mobileNumber != null &&
+            currentDoctor.mobileNumber!.isNotEmpty) ||
+        (currentDoctor.secretaryNumber != null &&
+            currentDoctor.secretaryNumber!.isNotEmpty);
   }
 
   Future<void> _editDoctor() async {
@@ -353,15 +433,25 @@ class _DoctorPageState extends State<DoctorPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    (currentDoctor.hmoAccreditations?.isNotEmpty ?? false)
-                        ? Wrap(
+                    Builder(
+                      builder: (context) {
+                        final validHmos = _getValidHmoAccreditations();
+
+                        if (validHmos.isNotEmpty) {
+                          return Wrap(
                             spacing: 10,
                             runSpacing: 10,
-                            children: currentDoctor.hmoAccreditations!
-                                .map((hmo) => _HmoChip(label: hmo))
+                            children: validHmos
+                                .map(
+                                  (hmo) => _HmoChip(
+                                    label: hmo,
+                                    onTap: () => _copyToClipboard(hmo, 'HMO'),
+                                  ),
+                                )
                                 .toList(),
-                          )
-                        : Container(
+                          );
+                        } else {
+                          return Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.grey.shade100,
@@ -379,17 +469,25 @@ class _DoctorPageState extends State<DoctorPage> {
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  'No HMO accreditations on file',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 14,
-                                    fontStyle: FontStyle.italic,
+                                Expanded(
+                                  child: Text(
+                                    currentDoctor.hmoAccreditations?.isEmpty ??
+                                            true
+                                        ? 'No HMO accreditations on file'
+                                        : 'HMO accreditation data appears to be invalid',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                      fontStyle: FontStyle.italic,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                          );
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -437,70 +535,128 @@ class _DoctorPageState extends State<DoctorPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    if (currentDoctor.email != null &&
-                        currentDoctor.email!.isNotEmpty)
-                      _ContactInfoRow(
-                        icon: Icons.email_outlined,
-                        label: "Email",
-                        value: currentDoctor.email!,
-                        color: Colors.orange,
-                      ),
-                    if (currentDoctor.mobileNumber != null &&
-                        currentDoctor.mobileNumber!.isNotEmpty)
-                      _ContactInfoRow(
-                        icon: Icons.phone_android_outlined,
-                        label: "Mobile Number",
-                        value: currentDoctor.mobileNumber!,
-                        color: Colors.green,
-                      ),
-                    if (currentDoctor.secretaryNumber != null &&
-                        currentDoctor.secretaryNumber!.isNotEmpty)
-                      _ContactInfoRow(
-                        icon: Icons.support_agent_outlined,
-                        label: "Secretary's Number",
-                        value: currentDoctor.secretaryNumber!,
-                        color: Colors.purple,
-                      ),
-                    if (currentDoctor.address != null &&
-                        currentDoctor.address!.isNotEmpty)
-                      _ContactInfoRow(
-                        icon: Icons.location_on_outlined,
-                        label: "Address",
-                        value: currentDoctor.address!,
-                        color: Colors.red,
-                      ),
-                    if ((currentDoctor.email == null ||
-                            currentDoctor.email!.isEmpty) &&
-                        (currentDoctor.mobileNumber == null ||
-                            currentDoctor.mobileNumber!.isEmpty) &&
-                        (currentDoctor.secretaryNumber == null ||
-                            currentDoctor.secretaryNumber!.isEmpty) &&
-                        (currentDoctor.address == null ||
-                            currentDoctor.address!.isEmpty))
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: Colors.grey.shade600,
-                              size: 20,
+                    Builder(
+                      builder: (context) {
+                        final safeEmail = _getSafeContactInfo(
+                          currentDoctor.email,
+                          'email',
+                        );
+                        final safeMobile = _getSafeContactInfo(
+                          currentDoctor.mobileNumber,
+                          'phone',
+                        );
+                        final safeSecretary = _getSafeContactInfo(
+                          currentDoctor.secretaryNumber,
+                          'phone',
+                        );
+
+                        final hasValidContact =
+                            safeEmail.isNotEmpty ||
+                            safeMobile.isNotEmpty ||
+                            safeSecretary.isNotEmpty;
+
+                        if (hasValidContact) {
+                          return Column(
+                            children: [
+                              if (safeEmail.isNotEmpty)
+                                _ContactInfoRow(
+                                  icon: Icons.email_outlined,
+                                  label: "Email",
+                                  value: safeEmail,
+                                  color: Colors.orange,
+                                  onTap: () =>
+                                      _copyToClipboard(safeEmail, 'Email'),
+                                  isValid: true,
+                                ),
+                              if (safeMobile.isNotEmpty)
+                                _ContactInfoRow(
+                                  icon: Icons.phone_android_outlined,
+                                  label: "Mobile Number",
+                                  value: safeMobile,
+                                  color: Colors.green,
+                                  onTap: () => _copyToClipboard(
+                                    safeMobile,
+                                    'Mobile number',
+                                  ),
+                                  isValid: true,
+                                ),
+                              if (safeSecretary.isNotEmpty)
+                                _ContactInfoRow(
+                                  icon: Icons.support_agent_outlined,
+                                  label: "Secretary's Number",
+                                  value: safeSecretary,
+                                  color: Colors.purple,
+                                  onTap: () => _copyToClipboard(
+                                    safeSecretary,
+                                    'Secretary number',
+                                  ),
+                                  isValid: true,
+                                ),
+                              // Show invalid contact info if any exists
+                              if (currentDoctor.email != null &&
+                                  currentDoctor.email!.isNotEmpty &&
+                                  safeEmail.isEmpty)
+                                _ContactInfoRow(
+                                  icon: Icons.email_outlined,
+                                  label: "Email (Invalid)",
+                                  value: currentDoctor.email!,
+                                  color: Colors.red,
+                                  isValid: false,
+                                ),
+                              if (currentDoctor.mobileNumber != null &&
+                                  currentDoctor.mobileNumber!.isNotEmpty &&
+                                  safeMobile.isEmpty)
+                                _ContactInfoRow(
+                                  icon: Icons.phone_android_outlined,
+                                  label: "Mobile Number (Invalid)",
+                                  value: currentDoctor.mobileNumber!,
+                                  color: Colors.red,
+                                  isValid: false,
+                                ),
+                              if (currentDoctor.secretaryNumber != null &&
+                                  currentDoctor.secretaryNumber!.isNotEmpty &&
+                                  safeSecretary.isEmpty)
+                                _ContactInfoRow(
+                                  icon: Icons.support_agent_outlined,
+                                  label: "Secretary's Number (Invalid)",
+                                  value: currentDoctor.secretaryNumber!,
+                                  color: Colors.red,
+                                  isValid: false,
+                                ),
+                            ],
+                          );
+                        } else {
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(width: 12),
-                            Text(
-                              "No contact information available",
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 14,
-                              ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  color: Colors.grey.shade600,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _hasAnyContactInfo()
+                                        ? "Contact information is invalid or improperly formatted"
+                                        : "No contact information available",
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          );
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -513,7 +669,7 @@ class _DoctorPageState extends State<DoctorPage> {
         ),
       ),
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 1, // Set the selected index for highlighting
+        selectedIndex: 2, // Set to 2 for the doctor/stethoscope icon
         onTap: (index) {
           // Handle navigation here
         },
@@ -524,33 +680,47 @@ class _DoctorPageState extends State<DoctorPage> {
 
 class _HmoChip extends StatelessWidget {
   final String label;
-  const _HmoChip({required this.label});
+  final VoidCallback? onTap;
+
+  const _HmoChip({required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.pink.shade400, Colors.pink.shade600],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.pink.withOpacity(0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.pink.shade400, Colors.pink.shade600],
           ),
-        ],
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.pink.withOpacity(0.3),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: 6),
+              const Icon(Icons.copy, color: Colors.white, size: 12),
+            ],
+          ],
         ),
       ),
     );
@@ -562,61 +732,101 @@ class _ContactInfoRow extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  final VoidCallback? onTap;
+  final bool isValid;
 
   const _ContactInfoRow({
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
+    this.onTap,
+    this.isValid = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2), width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withOpacity(0.1),
-            ),
-            child: Icon(icon, size: 16, color: color),
+    return GestureDetector(
+      onTap: isValid ? onTap : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isValid
+              ? color.withOpacity(0.05)
+              : Colors.red.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isValid
+                ? color.withOpacity(0.2)
+                : Colors.red.withOpacity(0.3),
+            width: 1,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isValid
+                    ? color.withOpacity(0.1)
+                    : Colors.red.withOpacity(0.1),
+              ),
+              child: Icon(
+                isValid ? icon : Icons.error_outline,
+                size: 16,
+                color: isValid ? color : Colors.red,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isValid ? color : Colors.red,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      color: isValid ? Colors.black87 : Colors.red.shade700,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (!isValid) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Invalid format - please update',
+                      style: TextStyle(
+                        color: Colors.red.shade600,
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (isValid && onTap != null)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withOpacity(0.1),
+                ),
+                child: Icon(Icons.copy, size: 16, color: color),
+              ),
+          ],
+        ),
       ),
     );
   }
