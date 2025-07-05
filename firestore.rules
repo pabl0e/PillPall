@@ -13,7 +13,20 @@ service cloud.firestore {
     // all client requests to your Firestore database will be denied until you Update
     // your rules
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 7, 31);
+    //  allow read, write: if request.time < timestamp.date(2025, 7, 31);
+        allow read, write: if true;
+    }
+
+    // Rules for symptoms collection - users can only access their own symptoms
+    match /symptoms/{symptomId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Rules for doctors collection - users can only access their own doctors
+    match /doctors/{doctorId} {
+      allow read, write: if request.auth != null;
+      // Note: Add userId field to doctors for better security in production
     }
   }
 }
