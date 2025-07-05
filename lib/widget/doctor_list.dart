@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pillpall/widget/add_doctor.dart';
+import 'package:pillpall/widget/doctor_page.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 
 void main() {
@@ -94,6 +96,21 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
           // Navigation is handled by the GlobalHomeBar itself
         },
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 32.0), // Adjust value as needed
+        child: FloatingActionButton(
+          onPressed: () {
+            // Navigate to the AddDoctorPage
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AddDoctorPage()),
+            );
+          },
+          child: Icon(Icons.add, color: Colors.white),
+          backgroundColor: Colors.deepPurple,
+          tooltip: 'Add Doctor',
+        ),
+      ),
     );
   }
 }
@@ -105,43 +122,52 @@ class DoctorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            doctor.name,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+    return InkWell(
+      onTap: () {
+        // Navigate to the doctor's detail page
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => DoctorPage(doctor: doctor)),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 1),
             ),
-          ),
-          const SizedBox(height: 4),
-          ...doctor.specialties.map(
-            (specialty) => Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                specialty,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              doctor.name,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            ...doctor.specialties.map(
+              (specialty) => Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  specialty,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

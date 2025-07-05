@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pillpall/widget/add_doctor.dart'; // Make sure this import is present
+import 'package:pillpall/widget/doctor_list.dart'; // Import Doctor class
 import 'package:pillpall/widget/global_homebar.dart';
 
 class DoctorPage extends StatelessWidget {
-  const DoctorPage({super.key});
+  final Doctor doctor;
+
+  const DoctorPage({super.key, required this.doctor});
 
   @override
   Widget build(BuildContext context) {
@@ -58,19 +61,22 @@ class DoctorPage extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
-                        "Dr. Rosana Ferolin",
-                        style: TextStyle(
+                        doctor.name,
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                           color: Colors.black,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        "Obstetrics and Gynecology •\nGeneral Obstetrics and Gynecology",
-                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                        doctor.specialties.join(' •\n'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
                       ),
                     ],
                   ),
