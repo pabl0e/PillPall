@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:pillpall/services/task_service.dart';
+import 'package:pillpall/services/doctor_service.dart';
 import 'package:pillpall/widget/doctor_list.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 import 'package:pillpall/widget/symptom_widget.dart';
+import 'package:pillpall/widget/task_widget.dart'; // Import the Task_Widget
 
 void main() {
   runApp(MaterialApp(home: HomePage(), debugShowCheckedModeBanner: false));
@@ -16,6 +19,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   DateTime _selectedDate = DateTime.now();
+  final TaskService _taskService = TaskService();
+  final DoctorService _doctorService = DoctorService();
 
   @override
   Widget build(BuildContext context) {
@@ -87,361 +92,68 @@ class _HomePageState extends State<HomePage> {
                       label: "Add Tasks",
                       icon: Icons.add,
                       onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            TextEditingController checkboxController =
-                                TextEditingController();
-                            TextEditingController itemController =
-                                TextEditingController();
-                            DateTime startDate = DateTime.now();
-                            DateTime endDate = DateTime.now();
-                            TimeOfDay startTime = TimeOfDay.now();
-                            TimeOfDay endTime = TimeOfDay.now();
-                            List<String> todos = [];
-                            List<bool> todosChecked = [];
-                            return StatefulBuilder(
-                              builder: (context, setState) {
-                                return AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  contentPadding: EdgeInsets.all(20),
-                                  content: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.calendar_month,
-                                          size: 32,
-                                          color: Colors.deepPurple,
-                                        ),
-                                        SizedBox(height: 10),
-                                        // Start/End Date Row
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: GestureDetector(
-                                                onTap: () async {
-                                                  DateTime?
-                                                  picked = await showDatePicker(
-                                                    context: context,
-                                                    initialDate: startDate,
-                                                    firstDate: DateTime(
-                                                      DateTime.now().year - 1,
-                                                    ),
-                                                    lastDate: DateTime(
-                                                      DateTime.now().year + 2,
-                                                    ),
-                                                  );
-                                                  if (picked != null) {
-                                                    setState(() {
-                                                      startDate = picked;
-                                                      if (endDate.isBefore(
-                                                        startDate,
-                                                      ))
-                                                        endDate = startDate;
-                                                    });
-                                                  }
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                    vertical: 10,
-                                                    horizontal: 8,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Color(0xFFF5F5F5),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          8,
-                                                        ),
-                                                  ),
-                                                  child: Center(
-                                                    child: Text(
-                                                      "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}",
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        color: Colors.black87,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(width: 10),
-                                            Expanded(
-                                              child: GestureDetector(
-                                                onTap: () async {
-                                                  DateTime? picked =
-                                                      await showDatePicker(
-                                                        context: context,
-                                                        initialDate:
-                                                            endDate.isBefore(
-                                                              startDate,
-                                                            )
-                                                            ? startDate
-                                                            : endDate,
-                                                        firstDate: startDate,
-                                                        lastDate: DateTime(
-                                                          DateTime.now().year +
-                                                              2,
-                                                        ),
-                                                      );
-                                                  if (picked != null) {
-                                                    setState(() {
-                                                      endDate = picked;
-                                                    });
-                                                  }
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                    vertical: 10,
-                                                    horizontal: 8,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Color(0xFFF5F5F5),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          8,
-                                                        ),
-                                                  ),
-                                                  child: Center(
-                                                    child: Text(
-                                                      "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}",
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        color: Colors.black87,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 16),
-                                        // Start/End Time Row with clock icon in the middle and slightly higher
-                                        Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(
-                                              child: GestureDetector(
-                                                onTap: () async {
-                                                  TimeOfDay? picked =
-                                                      await showTimePicker(
-                                                        context: context,
-                                                        initialTime: startTime,
-                                                      );
-                                                  if (picked != null) {
-                                                    setState(() {
-                                                      startTime = picked;
-                                                    });
-                                                  }
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                    vertical: 10,
-                                                    horizontal: 8,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Color(0xFFF5F5F5),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          8,
-                                                        ),
-                                                  ),
-                                                  child: Center(
-                                                    child: Text(
-                                                      "Start: ${startTime.format(context)}",
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        color: Colors.black87,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 10,
-                                                right: 10,
-                                                top: 6,
-                                              ),
-                                              child: Icon(
-                                                Icons.access_time,
-                                                color: Colors.deepPurple,
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: GestureDetector(
-                                                onTap: () async {
-                                                  TimeOfDay? picked =
-                                                      await showTimePicker(
-                                                        context: context,
-                                                        initialTime: endTime,
-                                                      );
-                                                  if (picked != null) {
-                                                    setState(() {
-                                                      endTime = picked;
-                                                    });
-                                                  }
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                    vertical: 10,
-                                                    horizontal: 8,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Color(0xFFF5F5F5),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          8,
-                                                        ),
-                                                  ),
-                                                  child: Center(
-                                                    child: Text(
-                                                      "End: ${endTime.format(context)}",
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        color: Colors.black87,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Divider(height: 24),
-                                        Text(
-                                          "To Do",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.deepPurple[900],
-                                          ),
-                                        ),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          children: [
-                                            Checkbox(
-                                              value: false,
-                                              onChanged: null,
-                                            ),
-                                            Expanded(
-                                              child: TextField(
-                                                controller: checkboxController,
-                                                decoration: InputDecoration(
-                                                  hintText: "Add checkbox...",
-                                                  border: InputBorder.none,
-                                                ),
-                                                onSubmitted: (val) {
-                                                  if (val.trim().isNotEmpty) {
-                                                    setState(() {
-                                                      todos.add(val.trim());
-                                                      todosChecked.add(false);
-                                                      checkboxController
-                                                          .clear();
-                                                    });
-                                                  }
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        ...List.generate(
-                                          todos.length,
-                                          (i) => Row(
-                                            children: [
-                                              Checkbox(
-                                                value: todosChecked[i],
-                                                onChanged: (val) {
-                                                  setState(() {
-                                                    todosChecked[i] =
-                                                        val ?? false;
-                                                  });
-                                                },
-                                              ),
-                                              Expanded(child: Text(todos[i])),
-                                            ],
-                                          ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.add,
-                                              color: Colors.deepPurple,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Expanded(
-                                              child: TextField(
-                                                controller: itemController,
-                                                decoration: InputDecoration(
-                                                  hintText: "Add item...",
-                                                  border: InputBorder.none,
-                                                ),
-                                                onSubmitted: (val) {
-                                                  if (val.trim().isNotEmpty) {
-                                                    setState(() {
-                                                      todos.add(val.trim());
-                                                      todosChecked.add(false);
-                                                      itemController.clear();
-                                                    });
-                                                  }
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 16),
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Color(
-                                                0xFFFF69B4,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: 14,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              "SUBMIT",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                letterSpacing: 1.2,
-                                              ),
-                                            ),
-                                            onPressed: () {
-                                              // Handle submit logic here
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Task_Widget(), // Navigate to Task_Widget
+                          ),
                         );
                       },
                     ),
                     SizedBox(width: 16),
-                    // Empty Card 1
-                    _SquareTaskCard(),
-                    SizedBox(width: 16),
-                    // Empty Card 2
-                    _SquareTaskCard(),
+                    // Latest Tasks Cards
+                    Expanded(
+                      flex: 2,
+                      child: StreamBuilder(
+                        stream: _taskService.getTasks(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(),
+                              ],
+                            );
+                          }
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(),
+                              ],
+                            );
+                          }
+                          final tasks = snapshot.data!.docs.take(2).toList();
+                          return Row(
+                            children: List.generate(2, (i) {
+                              if (i < tasks.length) {
+                                final data = tasks[i].data() as Map<String, dynamic>;
+                                return Expanded(
+                                  child: _SquareTaskCard(
+                                    label: data['title'] ?? '',
+                                    icon: Icons.task_alt,
+                                    date: _formatDateWord(data['startDate']),
+                                    time: _formatTimeAMPM(data['startTime']),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => Task_Widget(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              } else {
+                                return Expanded(child: _SquareTaskCard());
+                              }
+                            }),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
                 SizedBox(height: 20),
@@ -467,10 +179,7 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
-                    SizedBox(width: 16),
-                    _SquareTaskCard(),
-                    SizedBox(width: 16),
-                    _SquareTaskCard(),
+                    // The latest 2 symptoms cards are removed for now
                   ],
                 ),
                 SizedBox(height: 20),
@@ -495,10 +204,7 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
-                    SizedBox(width: 16),
-                    _SquareTaskCard(),
-                    SizedBox(width: 16),
-                    _SquareTaskCard(),
+                    // The latest 2 doctors cards are removed for now
                   ],
                 ),
               ],
@@ -514,6 +220,28 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  String _formatDateWord(String? isoDate) {
+    if (isoDate == null || isoDate.isEmpty) return '';
+    final date = DateTime.tryParse(isoDate);
+    if (date == null) return '';
+    const months = [
+      '', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return "${months[date.month]} ${date.day}, ${date.year}";
+  }
+
+  String _formatTimeAMPM(String? time) {
+    if (time == null || time.isEmpty) return '';
+    final parts = time.split(':');
+    int hour = int.parse(parts[0]);
+    int minute = int.parse(parts[1]);
+    final ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 == 0 ? 12 : hour % 12;
+    final minuteStr = minute.toString().padLeft(2, '0');
+    return '$hour:$minuteStr $ampm';
+  }
 }
 
 // Add this widget below your _HomePageState class (outside of it):
@@ -521,8 +249,16 @@ class _SquareTaskCard extends StatelessWidget {
   final String label;
   final IconData? icon;
   final VoidCallback? onTap;
+  final String? date;
+  final String? time;
 
-  const _SquareTaskCard({this.label = "", this.icon, this.onTap});
+  const _SquareTaskCard({
+    this.label = "",
+    this.icon,
+    this.onTap,
+    this.date,
+    this.time,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -544,24 +280,48 @@ class _SquareTaskCard extends StatelessWidget {
             ],
           ),
           child: Center(
-            child: icon != null
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (date != null && date!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      date!,
+                      style: TextStyle(
+                        color: Colors.deepPurple,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
-                      SizedBox(height: 12),
-                      Icon(icon, size: 32, color: Colors.black87),
-                    ],
-                  )
-                : Container(),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                if (time != null && time!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2.0),
+                    child: Text(
+                      time!,
+                      style: TextStyle(
+                        color: Colors.teal,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                SizedBox(height: 8),
+                // Icon removed here
+              ],
+            ),
           ),
         ),
       ),

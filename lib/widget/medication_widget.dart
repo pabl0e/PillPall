@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/services/medication_service.dart';
 
 void main() {
   runApp(
@@ -16,6 +17,7 @@ class MedicationWidget extends StatefulWidget {
 
 class _MedicationWidget_State extends State<MedicationWidget> {
   DateTime _selectedDate = DateTime.now();
+  final MedicationService _medicationService = MedicationService();
 
   @override
   Widget build(BuildContext context) {
@@ -67,171 +69,244 @@ class _MedicationWidget_State extends State<MedicationWidget> {
                   ),
                 ),
                 SizedBox(height: 20),
-                // Paracetamol Card
-                Container(
-                  width: double.infinity,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      children: [
-                        Item1(),
-                        SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'Paracetamol',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.deepPurple,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  '5mg',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.deepPurple[700],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 115,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFFFDDED),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.access_time,
-                                        size: 15,
-                                        color: Colors.deepPurple[900],
-                                      ),
-                                      SizedBox(width: 5),
-                                      Text(
-                                        '8:00 AM',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.deepPurple[900],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                // Add this header text between the calendar and the medications list
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    "Your Medications",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple[900],
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
-                // Antihistamine Card
-                Container(
-                  width: double.infinity,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      children: [
-                        Item2(),
-                        SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'Antihistamine',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.deepPurple,
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                Text(
-                                  '10mg',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.deepPurple[700],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 115,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFFFDDED),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                // Medications List
+                SizedBox(
+                  height: 300, // Adjust as needed
+                  child: StreamBuilder(
+                    stream: _medicationService.getMedications(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return Center(child: Text('No medications yet.'));
+                      }
+                      final meds = snapshot.data!.docs;
+                      return ListView.builder(
+                        itemCount: meds.length,
+                        itemBuilder: (context, i) {
+                          final med = meds[i];
+                          final medId = med.id;
+                          final medData = med.data() as Map<String, dynamic>;
+
+                          return Card(
+                            child: ListTile(
+                              title: Row(
+                                children: [
+                                  Icon(Icons.medication, color: Colors.deepPurple, size: 22),
+                                  SizedBox(width: 8),
+                                  Text(medData['name'] ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 6),
+                                  Row(
                                     children: [
-                                      Icon(
-                                        Icons.access_time,
-                                        size: 15,
-                                        color: Colors.deepPurple[900],
-                                      ),
-                                      SizedBox(width: 5),
+                                      Icon(Icons.format_list_numbered, color: Colors.pinkAccent, size: 18),
+                                      SizedBox(width: 4),
+                                      Text(medData['dosage'] ?? ''),
+                                    ],
+                                  ),
+                                  SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.calendar_today, color: Colors.teal, size: 18),
+                                      SizedBox(width: 4),
                                       Text(
-                                        '9:00 AM',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.deepPurple[900],
-                                        ),
+                                        medData['date'] != null
+                                            ? _formatDateWord(medData['date'])
+                                            : '',
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                  SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.access_time, color: Colors.orange, size: 18),
+                                      SizedBox(width: 4),
+                                      Text(_formatTimeAMPM(medData['time'])),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              trailing: PopupMenuButton<String>(
+                                onSelected: (value) async {
+                                  if (value == 'edit') {
+                                    // Show edit dialog
+                                    TextEditingController medController = TextEditingController(text: medData['name']);
+                                    TextEditingController doseController = TextEditingController(text: medData['dosage']);
+                                    DateTime selectedDate = DateTime.tryParse(medData['date'] ?? '') ?? DateTime.now();
+                                    TimeOfDay selectedTime;
+                                    try {
+                                      final timeParts = (medData['time'] ?? '00:00').split(':');
+                                      selectedTime = TimeOfDay(
+                                        hour: int.parse(timeParts[0]),
+                                        minute: int.parse(timeParts[1]),
+                                      );
+                                    } catch (_) {
+                                      selectedTime = TimeOfDay.now();
+                                    }
+
+                                    await showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return StatefulBuilder(
+                                          builder: (context, setState) {
+                                            return AlertDialog(
+                                              title: Text('Edit Medication'),
+                                              content: SingleChildScrollView(
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    TextField(
+                                                      controller: medController,
+                                                      decoration: InputDecoration(
+                                                        labelText: 'Medication Name',
+                                                      ),
+                                                    ),
+                                                    TextField(
+                                                      controller: doseController,
+                                                      decoration: InputDecoration(labelText: 'Dosage'),
+                                                    ),
+                                                    SizedBox(height: 10),
+                                                    Row(
+                                                      children: [
+                                                        Text(
+                                                          "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+                                                        ),
+                                                        Spacer(),
+                                                        TextButton(
+                                                          child: Text('Pick'),
+                                                          onPressed: () async {
+                                                            DateTime? picked = await showDatePicker(
+                                                              context: context,
+                                                              initialDate: selectedDate,
+                                                              firstDate: DateTime(DateTime.now().year - 1),
+                                                              lastDate: DateTime(DateTime.now().year + 2),
+                                                            );
+                                                            if (picked != null) {
+                                                              setState(() {
+                                                                selectedDate = picked;
+                                                              });
+                                                            }
+                                                          },
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        Text("Time: ${selectedTime.format(context)}"),
+                                                        Spacer(),
+                                                        TextButton(
+                                                          child: Text('Pick'),
+                                                          onPressed: () async {
+                                                            TimeOfDay? picked = await showTimePicker(
+                                                              context: context,
+                                                              initialTime: selectedTime,
+                                                            );
+                                                            if (picked != null) {
+                                                              setState(() {
+                                                                selectedTime = picked;
+                                                              });
+                                                            }
+                                                          },
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  child: Text('Cancel'),
+                                                  onPressed: () => Navigator.of(context).pop(),
+                                                ),
+                                                ElevatedButton(
+                                                  child: Text('Save'),
+                                                  onPressed: () async {
+                                                    await _medicationService.updateMedication(
+                                                      medId,
+                                                      name: medController.text,
+                                                      dosage: doseController.text,
+                                                      date: selectedDate,
+                                                      time: selectedTime.format(context),
+                                                    );
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    );
+                                  } else if (value == 'delete') {
+                                    // Confirm delete
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Delete Medication'),
+                                        content: Text('Are you sure you want to delete this medication?'),
+                                        actions: [
+                                          TextButton(
+                                            child: Text('Cancel'),
+                                            onPressed: () => Navigator.of(context).pop(false),
+                                          ),
+                                          ElevatedButton(
+                                            child: Text('Delete'),
+                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                            onPressed: () => Navigator.of(context).pop(true),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      await _medicationService.deleteMedication(medId);
+                                    }
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, color: Colors.deepPurple),
+                                        SizedBox(width: 8),
+                                        Text('Edit'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Delete'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
               ],
@@ -331,6 +406,12 @@ class _MedicationWidget_State extends State<MedicationWidget> {
                           child: Text('Add'),
                           onPressed: () {
                             // Handle add logic here
+                            _medicationService.addMedication(
+                              name: medController.text,
+                              dosage: doseController.text,
+                              date: selectedDate,
+                              time: selectedTime.format(context),
+                            );
                             Navigator.of(context).pop();
                           },
                         ),
@@ -372,6 +453,24 @@ class _MedicationWidget_State extends State<MedicationWidget> {
       'December',
     ];
     return months[month - 1];
+  }
+
+  String _formatDateWord(String? isoDate) {
+    if (isoDate == null || isoDate.isEmpty) return '';
+    final date = DateTime.tryParse(isoDate);
+    if (date == null) return '';
+    return "${_monthName(date.month)} ${date.day}, ${date.year}";
+  }
+
+  String _formatTimeAMPM(String? time) {
+    if (time == null || time.isEmpty) return '';
+    final parts = time.split(':');
+    int hour = int.parse(parts[0]);
+    int minute = int.parse(parts[1]);
+    final ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 == 0 ? 12 : hour % 12;
+    final minuteStr = minute.toString().padLeft(2, '0');
+    return '$hour:$minuteStr $ampm';
   }
 }
 
