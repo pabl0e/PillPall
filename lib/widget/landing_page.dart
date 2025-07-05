@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pillpall/widget/doctor_list.dart';
 import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/widget/symptom_widget.dart';
 
 void main() {
-  runApp(MaterialApp(
-    home: HomePage(),
-    debugShowCheckedModeBanner: false,
-  ));
+  runApp(MaterialApp(home: HomePage(), debugShowCheckedModeBanner: false));
 }
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-  
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -43,10 +41,7 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(width: 8),
                     Text(
                       "- Your medication companion",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.black87),
                     ),
                   ],
                 ),
@@ -75,16 +70,13 @@ class _HomePageState extends State<HomePage> {
                 ), // App Title and Subtitle
 
                 SizedBox(height: 20),
-                // Calendar Section
 
+                // Calendar Section
                 SizedBox(height: 20),
                 // Scheduled Tasks Section
                 Text(
                   "Scheduled Tasks",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 SizedBox(height: 10),
                 Row(
@@ -98,8 +90,10 @@ class _HomePageState extends State<HomePage> {
                         showDialog(
                           context: context,
                           builder: (context) {
-                            TextEditingController checkboxController = TextEditingController();
-                            TextEditingController itemController = TextEditingController();
+                            TextEditingController checkboxController =
+                                TextEditingController();
+                            TextEditingController itemController =
+                                TextEditingController();
                             DateTime startDate = DateTime.now();
                             DateTime endDate = DateTime.now();
                             TimeOfDay startTime = TimeOfDay.now();
@@ -129,29 +123,46 @@ class _HomePageState extends State<HomePage> {
                                             Expanded(
                                               child: GestureDetector(
                                                 onTap: () async {
-                                                  DateTime? picked = await showDatePicker(
+                                                  DateTime?
+                                                  picked = await showDatePicker(
                                                     context: context,
                                                     initialDate: startDate,
-                                                    firstDate: DateTime(DateTime.now().year - 1),
-                                                    lastDate: DateTime(DateTime.now().year + 2),
+                                                    firstDate: DateTime(
+                                                      DateTime.now().year - 1,
+                                                    ),
+                                                    lastDate: DateTime(
+                                                      DateTime.now().year + 2,
+                                                    ),
                                                   );
                                                   if (picked != null) {
                                                     setState(() {
                                                       startDate = picked;
-                                                      if (endDate.isBefore(startDate)) endDate = startDate;
+                                                      if (endDate.isBefore(
+                                                        startDate,
+                                                      ))
+                                                        endDate = startDate;
                                                     });
                                                   }
                                                 },
                                                 child: Container(
-                                                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: 10,
+                                                    horizontal: 8,
+                                                  ),
                                                   decoration: BoxDecoration(
                                                     color: Color(0xFFF5F5F5),
-                                                    borderRadius: BorderRadius.circular(8),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
                                                   ),
                                                   child: Center(
                                                     child: Text(
                                                       "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}",
-                                                      style: TextStyle(fontSize: 14, color: Colors.black87),
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.black87,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -161,12 +172,21 @@ class _HomePageState extends State<HomePage> {
                                             Expanded(
                                               child: GestureDetector(
                                                 onTap: () async {
-                                                  DateTime? picked = await showDatePicker(
-                                                    context: context,
-                                                    initialDate: endDate.isBefore(startDate) ? startDate : endDate,
-                                                    firstDate: startDate,
-                                                    lastDate: DateTime(DateTime.now().year + 2),
-                                                  );
+                                                  DateTime? picked =
+                                                      await showDatePicker(
+                                                        context: context,
+                                                        initialDate:
+                                                            endDate.isBefore(
+                                                              startDate,
+                                                            )
+                                                            ? startDate
+                                                            : endDate,
+                                                        firstDate: startDate,
+                                                        lastDate: DateTime(
+                                                          DateTime.now().year +
+                                                              2,
+                                                        ),
+                                                      );
                                                   if (picked != null) {
                                                     setState(() {
                                                       endDate = picked;
@@ -174,15 +194,24 @@ class _HomePageState extends State<HomePage> {
                                                   }
                                                 },
                                                 child: Container(
-                                                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: 10,
+                                                    horizontal: 8,
+                                                  ),
                                                   decoration: BoxDecoration(
                                                     color: Color(0xFFF5F5F5),
-                                                    borderRadius: BorderRadius.circular(8),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
                                                   ),
                                                   child: Center(
                                                     child: Text(
                                                       "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}",
-                                                      style: TextStyle(fontSize: 14, color: Colors.black87),
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.black87,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -193,15 +222,17 @@ class _HomePageState extends State<HomePage> {
                                         SizedBox(height: 16),
                                         // Start/End Time Row with clock icon in the middle and slightly higher
                                         Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Expanded(
                                               child: GestureDetector(
                                                 onTap: () async {
-                                                  TimeOfDay? picked = await showTimePicker(
-                                                    context: context,
-                                                    initialTime: startTime,
-                                                  );
+                                                  TimeOfDay? picked =
+                                                      await showTimePicker(
+                                                        context: context,
+                                                        initialTime: startTime,
+                                                      );
                                                   if (picked != null) {
                                                     setState(() {
                                                       startTime = picked;
@@ -209,31 +240,48 @@ class _HomePageState extends State<HomePage> {
                                                   }
                                                 },
                                                 child: Container(
-                                                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: 10,
+                                                    horizontal: 8,
+                                                  ),
                                                   decoration: BoxDecoration(
                                                     color: Color(0xFFF5F5F5),
-                                                    borderRadius: BorderRadius.circular(8),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
                                                   ),
                                                   child: Center(
                                                     child: Text(
                                                       "Start: ${startTime.format(context)}",
-                                                      style: TextStyle(fontSize: 14, color: Colors.black87),
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.black87,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
                                             ),
                                             Padding(
-                                              padding: const EdgeInsets.only(left: 10, right: 10, top: 6),
-                                              child: Icon(Icons.access_time, color: Colors.deepPurple),
+                                              padding: const EdgeInsets.only(
+                                                left: 10,
+                                                right: 10,
+                                                top: 6,
+                                              ),
+                                              child: Icon(
+                                                Icons.access_time,
+                                                color: Colors.deepPurple,
+                                              ),
                                             ),
                                             Expanded(
                                               child: GestureDetector(
                                                 onTap: () async {
-                                                  TimeOfDay? picked = await showTimePicker(
-                                                    context: context,
-                                                    initialTime: endTime,
-                                                  );
+                                                  TimeOfDay? picked =
+                                                      await showTimePicker(
+                                                        context: context,
+                                                        initialTime: endTime,
+                                                      );
                                                   if (picked != null) {
                                                     setState(() {
                                                       endTime = picked;
@@ -241,15 +289,24 @@ class _HomePageState extends State<HomePage> {
                                                   }
                                                 },
                                                 child: Container(
-                                                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: 10,
+                                                    horizontal: 8,
+                                                  ),
                                                   decoration: BoxDecoration(
                                                     color: Color(0xFFF5F5F5),
-                                                    borderRadius: BorderRadius.circular(8),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
                                                   ),
                                                   child: Center(
                                                     child: Text(
                                                       "End: ${endTime.format(context)}",
-                                                      style: TextStyle(fontSize: 14, color: Colors.black87),
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.black87,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -269,7 +326,10 @@ class _HomePageState extends State<HomePage> {
                                         SizedBox(height: 10),
                                         Row(
                                           children: [
-                                            Checkbox(value: false, onChanged: null),
+                                            Checkbox(
+                                              value: false,
+                                              onChanged: null,
+                                            ),
                                             Expanded(
                                               child: TextField(
                                                 controller: checkboxController,
@@ -282,7 +342,8 @@ class _HomePageState extends State<HomePage> {
                                                     setState(() {
                                                       todos.add(val.trim());
                                                       todosChecked.add(false);
-                                                      checkboxController.clear();
+                                                      checkboxController
+                                                          .clear();
                                                     });
                                                   }
                                                 },
@@ -298,7 +359,8 @@ class _HomePageState extends State<HomePage> {
                                                 value: todosChecked[i],
                                                 onChanged: (val) {
                                                   setState(() {
-                                                    todosChecked[i] = val ?? false;
+                                                    todosChecked[i] =
+                                                        val ?? false;
                                                   });
                                                 },
                                               ),
@@ -308,7 +370,10 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                         Row(
                                           children: [
-                                            Icon(Icons.add, color: Colors.deepPurple),
+                                            Icon(
+                                              Icons.add,
+                                              color: Colors.deepPurple,
+                                            ),
                                             SizedBox(width: 8),
                                             Expanded(
                                               child: TextField(
@@ -335,11 +400,16 @@ class _HomePageState extends State<HomePage> {
                                           width: double.infinity,
                                           child: ElevatedButton(
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Color(0xFFFF69B4),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(8),
+                                              backgroundColor: Color(
+                                                0xFFFF69B4,
                                               ),
-                                              padding: EdgeInsets.symmetric(vertical: 14),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: 14,
+                                              ),
                                             ),
                                             child: Text(
                                               "SUBMIT",
@@ -378,10 +448,7 @@ class _HomePageState extends State<HomePage> {
                 // My daily insights Section
                 Text(
                   "My daily insights",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 SizedBox(height: 20),
                 // Another row for symptoms logging
@@ -392,7 +459,12 @@ class _HomePageState extends State<HomePage> {
                       label: "Log your symptoms",
                       icon: Icons.add,
                       onTap: () {
-                      // Action to log symptoms
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SymptomWidget(),
+                          ),
+                        );
                       },
                     ),
                     SizedBox(width: 16),
@@ -405,10 +477,7 @@ class _HomePageState extends State<HomePage> {
                 // Your Doctor's Contact Details
                 Text(
                   "Your Doctor's Contact Details",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 SizedBox(height: 10),
                 Row(
@@ -418,7 +487,12 @@ class _HomePageState extends State<HomePage> {
                       label: "Add Doctor",
                       icon: Icons.add,
                       onTap: () {
-                        // Action to add doctor
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DoctorListScreen(),
+                          ),
+                        );
                       },
                     ),
                     SizedBox(width: 16),
@@ -440,71 +514,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  Widget _buildReminderTile(String medication, String dosage, String time) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFFFFDDED),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                medication,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                dosage,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.deepPurple[700],
-                ),
-              ),
-            ],
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.deepPurple,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.access_time, size: 16, color: Colors.white),
-                SizedBox(width: 4),
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // Add this widget below your _HomePageState class (outside of it):
@@ -513,12 +522,7 @@ class _SquareTaskCard extends StatelessWidget {
   final IconData? icon;
   final VoidCallback? onTap;
 
-  const _SquareTaskCard({
-    this.label = "",
-    this.icon,
-    this.onTap,
-    super.key,
-  });
+  const _SquareTaskCard({this.label = "", this.icon, this.onTap});
 
   @override
   Widget build(BuildContext context) {
