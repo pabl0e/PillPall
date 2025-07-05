@@ -4,22 +4,21 @@ import 'package:intl/intl.dart';
 import '../models/doctor_model.dart';
 import '../services/doctor_service.dart';
 
-class AddDoctorPage extends StatefulWidget {
-  const AddDoctorPage({super.key});
+class EditDoctorPage extends StatefulWidget {
+  final Doctor doctor;
+
+  const EditDoctorPage({super.key, required this.doctor});
 
   @override
-  State<AddDoctorPage> createState() => _AddDoctorPageState();
+  State<EditDoctorPage> createState() => _EditDoctorPageState();
 }
 
-class _AddDoctorPageState extends State<AddDoctorPage> {
+class _EditDoctorPageState extends State<EditDoctorPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _secretaryController = TextEditingController();
   final _mobileController = TextEditingController();
-
-  final DoctorService _doctorService = DoctorService();
-  bool _isLoading = false;
 
   // HMO Accreditation variables
   List<String> selectedHMOs = [];
@@ -40,44 +39,175 @@ class _AddDoctorPageState extends State<AddDoctorPage> {
   // Specialty variables
   List<String> selectedSpecialties = [];
   final List<String> availableSpecialties = [
-    'Anesthesiology',
-    'ENT (Otorhinolaryngology)',
-    'Family and Community Medicine',
+    'Cardiology',
+    'Dermatology',
+    'Endocrinology',
+    'Gastroenterology',
+    'General Practice',
+    'Gynecology',
+    'Hematology',
     'Internal Medicine',
-    'Obstetrics and Gynecology',
+    'Neurology',
+    'Oncology',
     'Ophthalmology',
     'Orthopedics',
-    'Pathology',
+    'Otolaryngology',
     'Pediatrics',
+    'Psychiatry',
+    'Pulmonology',
     'Radiology',
+    'Rheumatology',
     'Surgery',
+    'Urology',
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _initializeControllers();
+  }
+
+  void _initializeControllers() {
+    _nameController.text = widget.doctor.name;
+    _emailController.text = widget.doctor.email ?? '';
+    _secretaryController.text = widget.doctor.secretaryNumber ?? '';
+    _mobileController.text = widget.doctor.mobileNumber ?? '';
+
+    selectedSpecialties = List.from(widget.doctor.specialties);
+    selectedHMOs = List.from(widget.doctor.hmoAccreditations ?? []);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _secretaryController.dispose();
+    _mobileController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateDoctor() async {
+    if (_formKey.currentState!.validate()) {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Updating doctor...'),
+              ],
+            ),
+          );
+        },
+      );
+
+      try {
+        // Create updated doctor object
+        Doctor updatedDoctor = widget.doctor.copyWith(
+          name: _nameController.text.trim(),
+          specialties: selectedSpecialties,
+          hmoAccreditations: selectedHMOs,
+          mobileNumber: _mobileController.text.trim().isEmpty
+              ? null
+              : _mobileController.text.trim(),
+          secretaryNumber: _secretaryController.text.trim().isEmpty
+              ? null
+              : _secretaryController.text.trim(),
+          email: _emailController.text.trim().isEmpty
+              ? null
+              : _emailController.text.trim(),
+          updatedAt: DateTime.now(),
+        );
+
+        // Update the doctor in Firestore
+        await DoctorService().updateDoctor(widget.doctor.id!, updatedDoctor);
+
+        // Close loading dialog
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Dr. ${updatedDoctor.name} has been updated successfully',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Return the updated doctor
+          Navigator.of(context).pop(updatedDoctor);
+        }
+      } catch (e) {
+        // Close loading dialog
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update doctor: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    String today = DateFormat('MMMM d, yyyy').format(DateTime.now());
+    String today = DateFormat('MMMM dd, yyyy').format(DateTime.now());
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFDDED),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      appBar: AppBar(
+        title: const Text(
+          'Edit Doctor',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 18,
+          ),
+        ),
+        backgroundColor: const Color(0xFFFFDDED),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        centerTitle: false,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Row: Date and Back Icon (left)
               Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      size: 28,
-                      color: Colors.black,
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE6A8F7),
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.black,
+                      size: 25,
+                    ),
                   ),
                   const Spacer(),
                   Text(
@@ -89,7 +219,7 @@ class _AddDoctorPageState extends State<AddDoctorPage> {
               const SizedBox(height: 10),
               const Center(
                 child: Text(
-                  "Enter your doctor's contact information",
+                  "Edit doctor's information",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
@@ -153,111 +283,24 @@ class _AddDoctorPageState extends State<AddDoctorPage> {
                   height: 44,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFE6A8F7),
+                      backgroundColor: const Color(0xFFE6A8F7),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: _isLoading
-                        ? null
-                        : () async {
-                            if (_formKey.currentState!.validate()) {
-                              if (selectedSpecialties.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Please select at least one specialty',
-                                    ),
-                                    backgroundColor: Colors.orange,
-                                  ),
-                                );
-                                return;
-                              }
-
-                              setState(() {
-                                _isLoading = true;
-                              });
-
-                              try {
-                                // Create Doctor object
-                                Doctor newDoctor = Doctor(
-                                  name: _nameController.text.trim(),
-                                  specialties: selectedSpecialties,
-                                  hmoAccreditations: selectedHMOs,
-                                  mobileNumber:
-                                      _mobileController.text.trim().isEmpty
-                                      ? null
-                                      : _mobileController.text.trim(),
-                                  secretaryNumber:
-                                      _secretaryController.text.trim().isEmpty
-                                      ? null
-                                      : _secretaryController.text.trim(),
-                                  email: _emailController.text.trim().isEmpty
-                                      ? null
-                                      : _emailController.text.trim(),
-                                  address:
-                                      null, // You can add address field if needed
-                                );
-
-                                // Save to Firestore
-                                await _doctorService.createDoctor(newDoctor);
-
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Doctor added successfully!',
-                                      ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                  Navigator.pop(
-                                    context,
-                                    true,
-                                  ); // Return true to indicate success
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error: ${e.toString()}'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              } finally {
-                                if (mounted) {
-                                  setState(() {
-                                    _isLoading = false;
-                                  });
-                                }
-                              }
-                            }
-                          },
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.black,
-                              ),
-                            ),
-                          )
-                        : const Text(
-                            "SUBMIT",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.1,
-                              fontSize: 16,
-                            ),
-                          ),
+                    onPressed: _updateDoctor,
+                    child: const Text(
+                      "UPDATE",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -266,15 +309,16 @@ class _AddDoctorPageState extends State<AddDoctorPage> {
   }
 }
 
+// Reuse the same input field widgets from add_doctor.dart
 class _DoctorInputField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final TextInputType keyboardType;
+  final TextInputType? keyboardType;
 
   const _DoctorInputField({
     required this.label,
     required this.controller,
-    this.keyboardType = TextInputType.text,
+    this.keyboardType,
   });
 
   @override
@@ -292,200 +336,21 @@ class _DoctorInputField extends StatelessWidget {
           child: TextFormField(
             controller: controller,
             keyboardType: keyboardType,
+            style: const TextStyle(fontSize: 15),
             decoration: const InputDecoration(
-              border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 14,
               ),
+              border: InputBorder.none,
+              hintStyle: TextStyle(color: Colors.grey),
             ),
-            style: const TextStyle(fontSize: 15),
             validator: (value) {
-              if (value == null || value.isEmpty) {
+              if (label == "Full Name" && (value == null || value.isEmpty)) {
                 return 'Please enter $label';
               }
               return null;
             },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HMOSelectionField extends StatefulWidget {
-  final List<String> selectedHMOs;
-  final List<String> availableHMOs;
-  final Function(List<String>) onHMOsChanged;
-
-  const _HMOSelectionField({
-    required this.selectedHMOs,
-    required this.availableHMOs,
-    required this.onHMOsChanged,
-  });
-
-  @override
-  State<_HMOSelectionField> createState() => _HMOSelectionFieldState();
-}
-
-class _HMOSelectionFieldState extends State<_HMOSelectionField> {
-  final TextEditingController _customHMOController = TextEditingController();
-  List<String> workingList = [];
-
-  @override
-  void initState() {
-    super.initState();
-    workingList = List.from(widget.selectedHMOs);
-  }
-
-  void _showHMOSelectionDialog() {
-    List<String> allHMOs = List.from(widget.availableHMOs);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Select HMO Accreditations'),
-              content: Container(
-                width: double.maxFinite,
-                height: 400,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView(
-                        children: allHMOs.map((hmo) {
-                          return CheckboxListTile(
-                            title: Text(hmo),
-                            value: workingList.contains(hmo),
-                            onChanged: (bool? value) {
-                              setDialogState(() {
-                                if (value == true) {
-                                  if (!workingList.contains(hmo)) {
-                                    workingList.add(hmo);
-                                  }
-                                } else {
-                                  workingList.remove(hmo);
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const Divider(),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _customHMOController,
-                            decoration: const InputDecoration(
-                              hintText: 'Add custom HMO',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (_customHMOController.text.isNotEmpty) {
-                              String customHMO = _customHMOController.text
-                                  .trim();
-                              if (!allHMOs.contains(customHMO) &&
-                                  !workingList.contains(customHMO)) {
-                                setDialogState(() {
-                                  allHMOs.add(customHMO);
-                                  workingList.add(customHMO);
-                                });
-                                _customHMOController.clear();
-                              }
-                            }
-                          },
-                          child: const Text('Add'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    widget.onHMOsChanged(workingList);
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Done'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'HMO Accreditations',
-          style: TextStyle(fontSize: 15, color: Colors.black),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: InkWell(
-            onTap: _showHMOSelectionDialog,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: widget.selectedHMOs.isEmpty
-                        ? const Text(
-                            'Select HMO Accreditations',
-                            style: TextStyle(fontSize: 15, color: Colors.grey),
-                          )
-                        : Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: widget.selectedHMOs.map((hmo) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE6A8F7),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  hmo,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                  ),
-                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                ],
-              ),
-            ),
           ),
         ),
       ],
@@ -655,12 +520,251 @@ class _SpecialtySelectionFieldState extends State<_SpecialtySelectionField> {
                                   color: const Color(0xFFE6A8F7),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Text(
-                                  specialty,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      specialty,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    GestureDetector(
+                                      onTap: () {
+                                        // Remove this specialty from the list
+                                        List<String> updatedSpecialties =
+                                            List.from(
+                                              widget.selectedSpecialties,
+                                            );
+                                        updatedSpecialties.remove(specialty);
+                                        widget.onSpecialtiesChanged(
+                                          updatedSpecialties,
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.black26,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          size: 12,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HMOSelectionField extends StatefulWidget {
+  final List<String> selectedHMOs;
+  final List<String> availableHMOs;
+  final Function(List<String>) onHMOsChanged;
+
+  const _HMOSelectionField({
+    required this.selectedHMOs,
+    required this.availableHMOs,
+    required this.onHMOsChanged,
+  });
+
+  @override
+  State<_HMOSelectionField> createState() => _HMOSelectionFieldState();
+}
+
+class _HMOSelectionFieldState extends State<_HMOSelectionField> {
+  final TextEditingController _customHMOController = TextEditingController();
+  List<String> workingList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    workingList = List.from(widget.selectedHMOs);
+  }
+
+  void _showHMOSelectionDialog() {
+    List<String> allHMOs = List.from(widget.availableHMOs);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Select HMO Accreditations'),
+              content: Container(
+                width: double.maxFinite,
+                height: 400,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        children: allHMOs.map((hmo) {
+                          return CheckboxListTile(
+                            title: Text(hmo),
+                            value: workingList.contains(hmo),
+                            onChanged: (bool? value) {
+                              setDialogState(() {
+                                if (value == true) {
+                                  if (!workingList.contains(hmo)) {
+                                    workingList.add(hmo);
+                                  }
+                                } else {
+                                  workingList.remove(hmo);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const Divider(),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _customHMOController,
+                            decoration: const InputDecoration(
+                              hintText: 'Add custom HMO',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_customHMOController.text.isNotEmpty) {
+                              String customHMO = _customHMOController.text
+                                  .trim();
+                              if (!allHMOs.contains(customHMO) &&
+                                  !workingList.contains(customHMO)) {
+                                setDialogState(() {
+                                  allHMOs.add(customHMO);
+                                  workingList.add(customHMO);
+                                });
+                                _customHMOController.clear();
+                              }
+                            }
+                          },
+                          child: const Text('Add'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    widget.onHMOsChanged(workingList);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Done'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'HMO Accreditations',
+          style: TextStyle(fontSize: 15, color: Colors.black),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: InkWell(
+            onTap: _showHMOSelectionDialog,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: widget.selectedHMOs.isEmpty
+                        ? const Text(
+                            'Select HMO Accreditations',
+                            style: TextStyle(fontSize: 15, color: Colors.grey),
+                          )
+                        : Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: widget.selectedHMOs.map((hmo) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE6A8F7),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      hmo,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    GestureDetector(
+                                      onTap: () {
+                                        // Remove this HMO from the list
+                                        List<String> updatedHMOs = List.from(
+                                          widget.selectedHMOs,
+                                        );
+                                        updatedHMOs.remove(hmo);
+                                        widget.onHMOsChanged(updatedHMOs);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.black26,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          size: 12,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                             }).toList(),

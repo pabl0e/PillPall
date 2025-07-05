@@ -11,7 +11,7 @@ class SymptomWidget extends StatefulWidget {
 class _SymptomWidgetState extends State<SymptomWidget> {
   DateTime _selectedDate = DateTime.now();
 
-  final List<SymptomEntry> symptomEntries = [
+  final List<SymptomEntry> allSymptomEntries = [
     SymptomEntry(
       text: "Lorem Ipsum is simply dummy text of the print...",
       timestamp: DateTime.now().subtract(const Duration(hours: 2)),
@@ -21,6 +21,30 @@ class _SymptomWidgetState extends State<SymptomWidget> {
       timestamp: DateTime.now().subtract(const Duration(hours: 5)),
     ),
   ];
+
+  List<SymptomEntry> get todaySymptomEntries {
+    DateTime today = DateTime.now();
+    return allSymptomEntries.where((entry) {
+      return entry.timestamp.year == today.year &&
+          entry.timestamp.month == today.month &&
+          entry.timestamp.day == today.day;
+    }).toList();
+  }
+
+  List<SymptomEntry> get selectedDateSymptomEntries {
+    return allSymptomEntries.where((entry) {
+      return entry.timestamp.year == _selectedDate.year &&
+          entry.timestamp.month == _selectedDate.month &&
+          entry.timestamp.day == _selectedDate.day;
+    }).toList();
+  }
+
+  bool get isSelectedDateToday {
+    DateTime today = DateTime.now();
+    return _selectedDate.year == today.year &&
+        _selectedDate.month == today.month &&
+        _selectedDate.day == today.day;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +97,7 @@ class _SymptomWidgetState extends State<SymptomWidget> {
 
             const SizedBox(height: 16),
 
-            // Symptoms Section
+            // Today's Symptoms Section
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(16),
@@ -101,10 +125,80 @@ class _SymptomWidgetState extends State<SymptomWidget> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ...symptomEntries.map((entry) => _buildSymptomEntry(entry)),
+                  todaySymptomEntries.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Center(
+                            child: Text(
+                              'No symptoms logged for today',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Column(
+                          children: todaySymptomEntries
+                              .map((entry) => _buildSymptomEntry(entry))
+                              .toList(),
+                        ),
                 ],
               ),
             ),
+
+            // Selected Date Symptoms Section (only show if different from today)
+            if (!isSelectedDateToday) ...[
+              const SizedBox(height: 16),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Symptoms for ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    selectedDateSymptomEntries.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text(
+                                'No symptoms logged for ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Column(
+                            children: selectedDateSymptomEntries
+                                .map((entry) => _buildSymptomEntry(entry))
+                                .toList(),
+                          ),
+                  ],
+                ),
+              ),
+            ],
 
             const SizedBox(height: 100), // Space for bottom navigation
           ],
@@ -156,10 +250,18 @@ class _SymptomWidgetState extends State<SymptomWidget> {
               onPressed: () {
                 if (symptomController.text.isNotEmpty) {
                   setState(() {
-                    symptomEntries.add(
+                    // Create symptom entry with the selected date but current time
+                    DateTime symptomDateTime = DateTime(
+                      _selectedDate.year,
+                      _selectedDate.month,
+                      _selectedDate.day,
+                      DateTime.now().hour,
+                      DateTime.now().minute,
+                    );
+                    allSymptomEntries.add(
                       SymptomEntry(
                         text: symptomController.text,
-                        timestamp: DateTime.now(),
+                        timestamp: symptomDateTime,
                       ),
                     );
                   });
@@ -201,13 +303,23 @@ class _SymptomWidgetState extends State<SymptomWidget> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              entry.text,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-                height: 1.4,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.text,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
             ),
           ),
         ],
