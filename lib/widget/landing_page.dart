@@ -6,6 +6,7 @@ import 'package:pillpall/widget/global_homebar.dart';
 import 'package:pillpall/widget/symptom_widget.dart';
 import 'package:pillpall/widget/task_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pillpall/auth_service.dart'; // Import your auth service
 
 void main() {
   runApp(MaterialApp(home: HomePage(), debugShowCheckedModeBanner: false));
@@ -22,6 +23,9 @@ class _HomePageState extends State<HomePage> {
   DateTime _selectedDate = DateTime.now();
   final TaskService _taskService = TaskService();
   final DoctorService _doctorService = DoctorService();
+
+  // Helper method to get current user ID
+  String? get _currentUserId => authService.value.currentUser?.uid;
 
   @override
   Widget build(BuildContext context) {
@@ -73,11 +77,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                ), // App Title and Subtitle
-
-                SizedBox(height: 20),
-
-                // Calendar Section
+                ),
                 SizedBox(height: 20),
                 // Scheduled Tasks Section
                 Text(
@@ -96,36 +96,48 @@ class _HomePageState extends State<HomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => Task_Widget(), // Navigate to Task_Widget
+                            builder: (context) => Task_Widget(),
                           ),
                         );
                       },
                     ),
                     SizedBox(width: 16),
-                    // Latest Tasks Cards
+                    // Latest Tasks Cards - FIXED
                     Expanded(
                       flex: 2,
-                      child: StreamBuilder(
+                      child: StreamBuilder<QuerySnapshot>(
                         stream: _taskService.getTasks(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return Row(
                               children: [
-                                _SquareTaskCard(),
+                                _SquareTaskCard(label: "Loading..."),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(label: "Loading..."),
+                              ],
+                            );
+                          }
+                          
+                          if (snapshot.hasError) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(label: "Error loading tasks"),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
+                          
                           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
-                                _SquareTaskCard(),
+                                _SquareTaskCard(label: "No tasks yet"),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
+                          
                           final tasks = snapshot.data!.docs.take(2).toList();
                           return Row(
                             children: List.generate(2, (i) {
@@ -133,7 +145,7 @@ class _HomePageState extends State<HomePage> {
                                 final data = tasks[i].data() as Map<String, dynamic>;
                                 return Expanded(
                                   child: _SquareTaskCard(
-                                    label: data['title'] ?? '',
+                                    label: data['title'] ?? 'Untitled Task',
                                     icon: Icons.task_alt,
                                     date: _formatDateWord(data['startDate']),
                                     time: _formatTimeAMPM(data['startTime']),
@@ -164,7 +176,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 SizedBox(height: 20),
-                // Another row for symptoms logging
+                // Symptoms row - FIXED with userId filter
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -181,33 +193,50 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                     SizedBox(width: 16),
-                    // Latest Symptoms Cards
+                    // Latest Symptoms Cards - FIXED
                     Expanded(
                       flex: 2,
                       child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('symptoms')
-                            .orderBy('createdAt', descending: true)
-                            .snapshots(),
+                        stream: _currentUserId != null
+                            ? FirebaseFirestore.instance
+                                .collection('symptoms')
+                                .where('userId', isEqualTo: _currentUserId) // Filter by user
+                                .orderBy('createdAt', descending: true)
+                                .limit(2) // Limit to 2 for efficiency
+                                .snapshots()
+                            : Stream.empty(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return Row(
                               children: [
-                                _SquareTaskCard(),
+                                _SquareTaskCard(label: "Loading..."),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(label: "Loading..."),
+                              ],
+                            );
+                          }
+                          
+                          if (snapshot.hasError) {
+                            print('Symptoms stream error: ${snapshot.error}');
+                            return Row(
+                              children: [
+                                _SquareTaskCard(label: "Error loading symptoms"),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
+                          
                           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
-                                _SquareTaskCard(),
+                                _SquareTaskCard(label: "No symptoms logged"),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
+                          
                           final symptoms = snapshot.data!.docs.take(2).toList();
                           return Row(
                             children: List.generate(2, (i) {
@@ -215,7 +244,7 @@ class _HomePageState extends State<HomePage> {
                                 final data = symptoms[i].data() as Map<String, dynamic>;
                                 return Expanded(
                                   child: _SquareTaskCard(
-                                    label: data['name'] ?? '',
+                                    label: data['name'] ?? 'Unknown Symptom',
                                     date: _formatDateWord(data['date']),
                                     time: _formatTimeAMPM(data['time']),
                                     onTap: () {
@@ -239,7 +268,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 SizedBox(height: 20),
-                // Your Doctor's Contact Details
+                // Your Doctor's Contact Details - FIXED with userId filter
                 Text(
                   "Your Doctor's Contact Details",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -261,33 +290,50 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                     SizedBox(width: 16),
-                    // Latest Doctors Cards
+                    // Latest Doctors Cards - FIXED
                     Expanded(
                       flex: 2,
-                      child: StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('doctors')
-                            .orderBy('createdAt', descending: true)
-                            .snapshots(),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: _currentUserId != null
+                            ? FirebaseFirestore.instance
+                                .collection('doctors')
+                                .where('userId', isEqualTo: _currentUserId) // Filter by user
+                                .orderBy('createdAt', descending: true)
+                                .limit(2) // Limit to 2 for efficiency
+                                .snapshots()
+                            : Stream.empty(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return Row(
                               children: [
-                                _SquareTaskCard(),
+                                _SquareTaskCard(label: "Loading..."),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(label: "Loading..."),
+                              ],
+                            );
+                          }
+                          
+                          if (snapshot.hasError) {
+                            print('Doctors stream error: ${snapshot.error}');
+                            return Row(
+                              children: [
+                                _SquareTaskCard(label: "Error loading doctors"),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
+                          
                           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
-                                _SquareTaskCard(),
+                                _SquareTaskCard(label: "No doctors added"),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
+                          
                           final doctors = snapshot.data!.docs.take(2).toList();
                           return Row(
                             children: List.generate(2, (i) {
@@ -295,9 +341,9 @@ class _HomePageState extends State<HomePage> {
                                 final data = doctors[i].data() as Map<String, dynamic>;
                                 return Expanded(
                                   child: _SquareTaskCard(
-                                    label: data['name'] ?? '',
-                                    date: data['specialty'] ?? '',
-                                    time: data['phone'] ?? '',
+                                    label: data['name'] ?? 'Unknown Doctor',
+                                    date: data['specialty'] ?? 'No specialty',
+                                    time: data['phone'] ?? 'No phone',
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -324,7 +370,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 0, // Set the selected index for highlighting
+        selectedIndex: 0,
         onTap: (index) {
           // Handle navigation here
         },
@@ -345,17 +391,20 @@ class _HomePageState extends State<HomePage> {
 
   String _formatTimeAMPM(String? time) {
     if (time == null || time.isEmpty) return '';
-    final parts = time.split(':');
-    int hour = int.parse(parts[0]);
-    int minute = int.parse(parts[1]);
-    final ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12 == 0 ? 12 : hour % 12;
-    final minuteStr = minute.toString().padLeft(2, '0');
-    return '$hour:$minuteStr $ampm';
+    try {
+      final parts = time.split(':');
+      int hour = int.parse(parts[0]);
+      int minute = int.parse(parts[1]);
+      final ampm = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12 == 0 ? 12 : hour % 12;
+      final minuteStr = minute.toString().padLeft(2, '0');
+      return '$hour:$minuteStr $ampm';
+    } catch (e) {
+      return 'Invalid time';
+    }
   }
 }
 
-// Add this widget below your _HomePageState class (outside of it):
 class _SquareTaskCard extends StatelessWidget {
   final String label;
   final IconData? icon;
@@ -391,47 +440,54 @@ class _SquareTaskCard extends StatelessWidget {
             ],
           ),
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                if (date != null && date!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(
-                      date!,
-                      style: TextStyle(
-                        color: Colors.deepPurple,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
                     ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                if (time != null && time!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2.0),
-                    child: Text(
-                      time!,
-                      style: TextStyle(
-                        color: Colors.teal,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
+                  if (date != null && date!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        date!,
+                        style: TextStyle(
+                          color: Colors.deepPurple,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                  ),
-                SizedBox(height: 8),
-                // Icon removed here
-              ],
+                  if (time != null && time!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2.0),
+                      child: Text(
+                        time!,
+                        style: TextStyle(
+                          color: Colors.teal,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
