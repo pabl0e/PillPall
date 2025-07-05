@@ -264,7 +264,9 @@ class _Task_WidgetState extends State<Task_Widget> {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 32.0), // Raises the FAB above the nav bar
+        padding: const EdgeInsets.only(
+          bottom: 32.0,
+        ), // Raises the FAB above the nav bar
         child: FloatingActionButton(
           onPressed: () {
             showDialog(
@@ -594,7 +596,7 @@ class _Task_WidgetState extends State<Task_Widget> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 2, // Pills/Medication page
+        selectedIndex: 3, // Tasks page (was 2, now 3)
         onTap: (index) {
           // Navigation is handled by the GlobalHomeBar itself
         },

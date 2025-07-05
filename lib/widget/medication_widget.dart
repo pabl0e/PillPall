@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 
 void main() {
-  runApp(MaterialApp(
-    home: MedicationWidget(), 
-    debugShowCheckedModeBanner: false));
+  runApp(
+    MaterialApp(home: MedicationWidget(), debugShowCheckedModeBanner: false),
+  );
 }
 
 class MedicationWidget extends StatefulWidget {
@@ -286,7 +286,9 @@ class _MedicationWidget_State extends State<MedicationWidget> {
                                       firstDate: DateTime(
                                         DateTime.now().year - 1,
                                       ),
-                                      lastDate: DateTime(DateTime.now().year + 2),
+                                      lastDate: DateTime(
+                                        DateTime.now().year + 2,
+                                      ),
                                     );
                                     if (picked != null) {
                                       setState(() {
@@ -339,17 +341,14 @@ class _MedicationWidget_State extends State<MedicationWidget> {
               },
             );
           },
-          child: Icon(
-            Icons.add,
-            color: Colors.white,
-          ),
+          child: Icon(Icons.add, color: Colors.white),
           backgroundColor: Colors.deepPurple,
           tooltip: 'Add Medication',
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 3, // Pills/Medication page
+        selectedIndex: 4, // Pills/Medication page (was 3, now 4)
         onTap: (index) {
           // Navigation is handled by the GlobalHomeBar itself
         },

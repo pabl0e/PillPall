@@ -486,7 +486,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 4, // Set the selected index for highlighting
+        selectedIndex:
+            5, // Set the selected index for highlighting (was 4, now 5)
         onTap: (index) {
           // Handle navigation here
         },

@@ -91,7 +91,7 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
         ],
       ),
       bottomNavigationBar: GlobalHomeBar(
-        selectedIndex: 1, // Doctor page
+        selectedIndex: 2, // Doctor page (was 1, now 2)
         onTap: (index) {
           // Navigation is handled by the GlobalHomeBar itself
         },

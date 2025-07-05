@@ -4,6 +4,7 @@ import 'package:pillpall/profile_page.dart';
 import 'package:pillpall/widget/doctor_list.dart';
 import 'package:pillpall/widget/landing_page.dart'; // Contains HomePage class
 import 'package:pillpall/widget/medication_widget.dart'; // Add medication widget import
+import 'package:pillpall/widget/symptom_widget.dart'; // Add symptom widget import
 import 'package:pillpall/widget/task_widget.dart';
 
 class GlobalHomeBar extends StatelessWidget {
@@ -22,20 +23,25 @@ class GlobalHomeBar extends StatelessWidget {
         break;
       case 1:
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => DoctorListScreen()),
+          MaterialPageRoute(builder: (context) => SymptomWidget()),
         );
         break;
       case 2:
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => Task_Widget()),
+          MaterialPageRoute(builder: (context) => DoctorListScreen()),
         );
         break;
       case 3:
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => MedicationWidget()),
+          MaterialPageRoute(builder: (context) => Task_Widget()),
         );
         break;
       case 4:
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => MedicationWidget()),
+        );
+        break;
+      case 5:
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => ProfilePage()),
         );
@@ -59,7 +65,7 @@ class GlobalHomeBar extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -79,10 +85,12 @@ class GlobalHomeBar extends StatelessWidget {
             ),
             IconButton(
               icon: SvgPicture.asset(
-                'assets/doctor.svg',
+                'assets/symptoms.svg',
                 height: 30,
                 width: 30,
-                color: selectedIndex == 1 ? Colors.deepPurple : Colors.grey,
+                colorFilter: selectedIndex == 1
+                    ? ColorFilter.mode(Colors.deepPurple, BlendMode.srcIn)
+                    : ColorFilter.mode(Colors.grey, BlendMode.srcIn),
               ),
               onPressed: () {
                 if (selectedIndex != 1) {
@@ -90,13 +98,14 @@ class GlobalHomeBar extends StatelessWidget {
                 }
                 onTap?.call(1);
               },
-              tooltip: 'Doctor',
+              tooltip: 'Symptoms',
             ),
             IconButton(
-              icon: Icon(
-                Icons.task, // Task icon
+              icon: SvgPicture.asset(
+                'assets/doctor.svg',
+                height: 30,
+                width: 30,
                 color: selectedIndex == 2 ? Colors.deepPurple : Colors.grey,
-                size: 30,
               ),
               onPressed: () {
                 if (selectedIndex != 2) {
@@ -104,11 +113,11 @@ class GlobalHomeBar extends StatelessWidget {
                 }
                 onTap?.call(2);
               },
-              tooltip: 'Tasks',
+              tooltip: 'Doctor',
             ),
             IconButton(
               icon: Icon(
-                Icons.medication,
+                Icons.task, // Task icon
                 color: selectedIndex == 3 ? Colors.deepPurple : Colors.grey,
                 size: 30,
               ),
@@ -118,11 +127,11 @@ class GlobalHomeBar extends StatelessWidget {
                 }
                 onTap?.call(3);
               },
-              tooltip: 'Pills',
+              tooltip: 'Tasks',
             ),
             IconButton(
               icon: Icon(
-                Icons.settings,
+                Icons.medication,
                 color: selectedIndex == 4 ? Colors.deepPurple : Colors.grey,
                 size: 30,
               ),
@@ -131,6 +140,20 @@ class GlobalHomeBar extends StatelessWidget {
                   _navigateToPage(context, 4);
                 }
                 onTap?.call(4);
+              },
+              tooltip: 'Pills',
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.settings,
+                color: selectedIndex == 5 ? Colors.deepPurple : Colors.grey,
+                size: 30,
+              ),
+              onPressed: () {
+                if (selectedIndex != 5) {
+                  _navigateToPage(context, 5);
+                }
+                onTap?.call(5);
               },
               tooltip: 'Settings',
             ),
