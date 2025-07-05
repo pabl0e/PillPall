@@ -8,7 +8,7 @@ class Doctor {
   final String? mobileNumber;
   final String? secretaryNumber;
   final String? email;
-  final String? address;
+  final String userId; // Added userId field for user isolation
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -20,7 +20,7 @@ class Doctor {
     this.mobileNumber,
     this.secretaryNumber,
     this.email,
-    this.address,
+    required this.userId, // Made userId required
     this.createdAt,
     this.updatedAt,
   });
@@ -34,7 +34,7 @@ class Doctor {
       'mobileNumber': mobileNumber,
       'secretaryNumber': secretaryNumber,
       'email': email,
-      'address': address,
+      'userId': userId, // Added userId to Firestore document
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -51,7 +51,7 @@ class Doctor {
       mobileNumber: data['mobileNumber'],
       secretaryNumber: data['secretaryNumber'],
       email: data['email'],
-      address: data['address'],
+      userId: data['userId'] ?? '', // Added userId from Firestore document
       createdAt: data['createdAt']?.toDate(),
       updatedAt: data['updatedAt']?.toDate(),
     );
@@ -67,7 +67,7 @@ class Doctor {
       mobileNumber: map['mobileNumber'],
       secretaryNumber: map['secretaryNumber'],
       email: map['email'],
-      address: map['address'],
+      userId: map['userId'] ?? '', // Added userId from map
       createdAt: map['createdAt']?.toDate(),
       updatedAt: map['updatedAt']?.toDate(),
     );
@@ -82,7 +82,7 @@ class Doctor {
     String? mobileNumber,
     String? secretaryNumber,
     String? email,
-    String? address,
+    String? userId, // Added userId to copyWith
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -94,7 +94,7 @@ class Doctor {
       mobileNumber: mobileNumber ?? this.mobileNumber,
       secretaryNumber: secretaryNumber ?? this.secretaryNumber,
       email: email ?? this.email,
-      address: address ?? this.address,
+      userId: userId ?? this.userId, // Added userId to copyWith return
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
