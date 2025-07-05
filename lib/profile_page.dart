@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pillpall/auth_layout.dart';
 import 'package:pillpall/auth_service.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 
@@ -44,12 +45,20 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _resetUsernameFields() {
-    setState(() {
-      _usernameController.text =
-          authService.value.currentUser?.displayName ??
-          authService.value.currentUser?.email?.split('@')[0] ??
-          "User";
-    });
+    try {
+      setState(() {
+        _usernameController.text =
+            authService.value.currentUser?.displayName ??
+            authService.value.currentUser?.email?.split('@')[0] ??
+            "User";
+      });
+    } catch (e) {
+      // Handle Firebase not initialized error
+      print('Error resetting username fields: $e');
+      setState(() {
+        _usernameController.text = "User";
+      });
+    }
   }
 
   void _resetPasswordFields() {
@@ -61,12 +70,20 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadUserData() async {
-    // Load current user data from Firebase
-    final user = authService.value.currentUser;
-    if (user != null) {
+    try {
+      // Load current user data from Firebase
+      final user = authService.value.currentUser;
+      if (user != null) {
+        setState(() {
+          _usernameController.text =
+              user.displayName ?? user.email?.split('@')[0] ?? "User";
+        });
+      }
+    } catch (e) {
+      // Handle Firebase not initialized error
+      print('Error loading user data: $e');
       setState(() {
-        _usernameController.text =
-            user.displayName ?? user.email?.split('@')[0] ?? "User";
+        _usernameController.text = "User";
       });
     }
   }
@@ -279,7 +296,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
         if (mounted) {
           // Navigate back to root to let AuthLayout handle the transition
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const AuthLayout()),
+            (route) => false,
+          );
         }
       }
     } on FirebaseAuthException catch (e) {
@@ -339,10 +359,11 @@ class _ProfilePageState extends State<ProfilePage> {
       await authService.value.signOut();
 
       if (mounted) {
-        // The AuthLayout will automatically detect the auth state change
-        // and navigate back to the welcome screen
-        // Pop back to the AuthLayout to let it handle the navigation
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        // Navigate back to root and let AuthLayout handle the transition
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthLayout()),
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -464,7 +485,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
-        bottomNavigationBar: GlobalHomeBar(
+      bottomNavigationBar: GlobalHomeBar(
         selectedIndex: 4, // Set the selected index for highlighting
         onTap: (index) {
           // Handle navigation here

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pillpall/profile_page.dart';
-import 'package:pillpall/widget/doctor_page.dart';
+import 'package:pillpall/widget/doctor_list.dart';
 import 'package:pillpall/widget/landing_page.dart'; // Contains HomePage class
+import 'package:pillpall/widget/medication_widget.dart'; // Add medication widget import
 import 'package:pillpall/widget/task_widget.dart';
-import 'package:pillpall/widget/medication_widget.dart';
 
 class GlobalHomeBar extends StatelessWidget {
   final int selectedIndex;
@@ -18,27 +18,27 @@ class GlobalHomeBar extends StatelessWidget {
       case 0:
         Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (context) => HomePage()));
+        ).pushReplacement(MaterialPageRoute(builder: (context) => HomePage()));
         break;
       case 1:
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => DoctorPage()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => DoctorListScreen()),
+        );
         break;
       case 2:
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => Task_Widget()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => Task_Widget()),
+        );
         break;
       case 3:
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => MedicationWidget()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => MedicationWidget()),
+        );
         break;
       case 4:
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => ProfilePage()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => ProfilePage()),
+        );
         break;
     }
   }

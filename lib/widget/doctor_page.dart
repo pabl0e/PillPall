@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pillpall/widget/add_doctor.dart'; // Make sure this import is present
 import 'package:pillpall/widget/global_homebar.dart';
+
 class DoctorPage extends StatelessWidget {
   const DoctorPage({super.key});
 
@@ -69,10 +70,7 @@ class DoctorPage extends StatelessWidget {
                       SizedBox(height: 4),
                       Text(
                         "Obstetrics and Gynecology •\nGeneral Obstetrics and Gynecology",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
                       ),
                     ],
                   ),
@@ -93,7 +91,11 @@ class DoctorPage extends StatelessWidget {
                   children: [
                     Row(
                       children: const [
-                        Icon(Icons.credit_card, color: Colors.deepPurple, size: 22),
+                        Icon(
+                          Icons.credit_card,
+                          color: Colors.deepPurple,
+                          size: 22,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           "HMO Accreditations",
@@ -139,10 +141,16 @@ class DoctorPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            _ScheduleRow(label: "Site", value: "Chong Hua Medical Mall (Cebu City)"),
+            _ScheduleRow(
+              label: "Site",
+              value: "Chong Hua Medical Mall (Cebu City)",
+            ),
             _ScheduleRow(label: "Building", value: "Chong Hua Medical Mall"),
             _ScheduleRow(label: "Room #", value: "504 A"),
-            _ScheduleRow(label: "Schedule", value: "Tue, Fri: 11:00AM TO 04:00PM"),
+            _ScheduleRow(
+              label: "Schedule",
+              value: "Tue, Fri: 11:00AM TO 04:00PM",
+            ),
             _ScheduleRow(label: "Contact #", value: "09692089584"),
             _ScheduleRow(label: "Secretary", value: "Ruby"),
             const SizedBox(height: 20),
@@ -160,7 +168,7 @@ class DoctorPage extends StatelessWidget {
         tooltip: 'Add Doctor',
         child: const Icon(Icons.add, color: Colors.white),
       ),
-       bottomNavigationBar: GlobalHomeBar(
+      bottomNavigationBar: GlobalHomeBar(
         selectedIndex: 1, // Set the selected index for highlighting
         onTap: (index) {
           // Handle navigation here
@@ -189,9 +197,7 @@ class _HmoChip extends StatelessWidget {
           fontWeight: FontWeight.w600,
           fontSize: 13,
         ),
-        
       ),
-      
     );
   }
 }
@@ -222,10 +228,7 @@ class _ScheduleRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
             ),
           ),
         ],
