@@ -195,6 +195,8 @@ class _AddDoctorPageState extends State<AddDoctorPage> {
                                   email: _emailController.text.trim().isEmpty
                                       ? null
                                       : _emailController.text.trim(),
+                                  userId:
+                                      '', // Will be set by DoctorService.createDoctor
                                 );
 
                                 // Save to Firestore

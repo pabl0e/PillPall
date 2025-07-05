@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:pillpall/widget/add_edit_symptom.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 
-import '../debug/firestore_test.dart';
 import '../models/symptom_model.dart';
 import '../services/symptom_service.dart';
 
@@ -50,8 +49,24 @@ class _SymptomWidgetState extends State<SymptomWidget> {
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage;
+
+        // Provide more specific error messages
+        if (e.toString().contains('User not authenticated')) {
+          errorMessage = 'Please log in to view your symptoms.';
+        } else if (e.toString().contains('network')) {
+          errorMessage = 'Network error. Please check your connection.';
+        } else if (e.toString().contains('permission-denied')) {
+          errorMessage = 'Access denied. Please try logging in again.';
+        } else if (e.toString().contains('index')) {
+          errorMessage =
+              'Database is being set up. Please try again in a moment.';
+        } else {
+          errorMessage = 'Unable to load symptoms. Please try again.';
+        }
+
         setState(() {
-          _error = e.toString();
+          _error = errorMessage;
           _isLoading = false;
         });
       }
@@ -59,7 +74,24 @@ class _SymptomWidgetState extends State<SymptomWidget> {
   }
 
   Future<void> _refreshSymptoms() async {
-    await _loadSymptoms();
+    try {
+      await _loadSymptoms();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to refresh symptoms: ${e.toString()}'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _refreshSymptoms(),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   List<Symptom> get todaySymptoms {
@@ -81,29 +113,83 @@ class _SymptomWidgetState extends State<SymptomWidget> {
   }
 
   Future<void> _addSymptom([DateTime? forDate]) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            AddEditSymptomPage(selectedDate: forDate ?? _selectedDate),
-      ),
-    );
+    try {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              AddEditSymptomPage(selectedDate: forDate ?? _selectedDate),
+        ),
+      );
 
-    if (result == true) {
-      _refreshSymptoms();
+      if (result == true) {
+        await _refreshSymptoms();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Symptom added successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add symptom: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _addSymptom(forDate),
+            ),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _editSymptom(Symptom symptom) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddEditSymptomPage(symptom: symptom),
-      ),
-    );
+    try {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddEditSymptomPage(symptom: symptom),
+        ),
+      );
 
-    if (result == true) {
-      _refreshSymptoms();
+      if (result == true) {
+        await _refreshSymptoms();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Symptom updated successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update symptom: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _editSymptom(symptom),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -259,11 +345,6 @@ class _SymptomWidgetState extends State<SymptomWidget> {
         iconTheme: const IconThemeData(color: Colors.black),
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.bug_report, color: Colors.orange),
-            onPressed: () => testFirestoreConnection(),
-            tooltip: 'Debug Connection',
-          ),
           IconButton(
             icon: const Icon(Icons.add, color: Colors.deepPurple),
             onPressed: () => _addSymptom(),
@@ -502,7 +583,9 @@ class _SymptomWidgetState extends State<SymptomWidget> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    symptom.text,
+                    symptom.text.length > 40
+                        ? '${symptom.text.substring(0, 40)}...'
+                        : symptom.text,
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.black87,
