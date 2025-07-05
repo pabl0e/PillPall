@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,9 +9,17 @@ import 'package:pillpall/signup_page.dart';
 
 import 'firebase_options.dart';
 
+// Set this to true during development to force logout on app start
+const bool kForceLogoutOnStart = true;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Force logout during development for easier testing
+  if (kForceLogoutOnStart) {
+    await FirebaseAuth.instance.signOut();
+  }
 
   runApp(const MyApp());
 }
