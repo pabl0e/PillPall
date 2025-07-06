@@ -218,13 +218,21 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Enhanced delete account method with data preview
   Future<void> _deleteAccount() async {
-    final confirmed = await showDialog<bool>(
+    // Step 1: Show initial confirmation
+    final initialConfirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Account'),
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red, size: 28),
+            SizedBox(width: 8),
+            Text('Delete Account'),
+          ],
+        ),
         content: const Text(
-          'Are you sure you want to delete your account? This action cannot be undone.',
+          'This will permanently delete your account and all associated data. Do you want to see what will be deleted?',
         ),
         actions: [
           TextButton(
@@ -234,67 +242,319 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('Continue'),
           ),
         ],
       ),
     );
 
-    if (confirmed != true) return;
+    if (initialConfirmed != true) return;
 
-    // Get current password for reauthentication
-    String? currentPassword = await showDialog<String>(
+    // Step 2: Show loading while fetching data stats
+    showDialog(
       context: context,
-      builder: (context) {
-        final passwordController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Confirm Password'),
-          content: Column(
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Analyzing your data...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      // Get user data statistics
+      final stats = await authService.value.getUserDataStats();
+      final hasData = await authService.value.userHasData();
+
+      // Close loading dialog
+      if (mounted) Navigator.of(context).pop();
+
+      // Step 3: Show detailed data preview
+      final dataConfirmed = await _showDataPreviewDialog(stats, hasData);
+      if (dataConfirmed != true) return;
+
+      // Step 4: Get current password for reauthentication
+      String? currentPassword = await _showPasswordConfirmationDialog();
+      if (currentPassword == null || currentPassword.isEmpty) return;
+
+      // Step 5: Perform deletion
+      await _performAccountDeletion(currentPassword);
+
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) Navigator.of(context).pop();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error analyzing data: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Show detailed data preview dialog
+  Future<bool?> _showDataPreviewDialog(Map<String, int> stats, bool hasData) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Text('Data to be Deleted'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Please enter your current password to confirm account deletion:',
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Current Password',
-                  border: OutlineInputBorder(),
+              if (!hasData) ...[
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'No personal data found. Only your account will be deleted.',
+                          style: TextStyle(color: Colors.green[800]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.delete_forever, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text(
+                            'The following data will be permanently deleted:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red[800],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      ...stats.entries.where((entry) => entry.value > 0).map(
+                        (entry) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            children: [
+                              _getDataIcon(entry.key),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${entry.value} ${_getDataLabel(entry.key, entry.value)}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning, color: Colors.amber[700]),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'This action cannot be undone. Consider exporting your data first.',
+                          style: TextStyle(
+                            color: Colors.amber[800],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              SizedBox(height: 16),
+              Text(
+                'Your account and all associated data will be permanently removed from our servers.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
                 ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+              backgroundColor: Colors.red[50],
             ),
-            TextButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(passwordController.text),
-              child: const Text('Confirm'),
+            child: const Text('Delete Everything'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show password confirmation dialog
+  Future<String?> _showPasswordConfirmationDialog() async {
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        final passwordController = TextEditingController();
+        bool obscurePassword = true;
+        
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.security, color: Colors.blue, size: 28),
+                SizedBox(width: 8),
+                Text('Confirm Password'),
+              ],
             ),
-          ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Please enter your current password to confirm account deletion:',
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Current Password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setDialogState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(passwordController.text),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Confirm Deletion'),
+              ),
+            ],
+          ),
         );
       },
     );
+  }
 
-    if (currentPassword == null || currentPassword.isEmpty) return;
-
+  // Perform the actual account deletion
+  Future<void> _performAccountDeletion(String currentPassword) async {
     setState(() => _isLoading = true);
+
+    // Show deletion progress dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Deleting your account and data...'),
+            SizedBox(height: 8),
+            Text(
+              'This may take a few moments',
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
 
     try {
       final user = authService.value.currentUser;
       if (user != null && user.email != null) {
-        // Use the auth service method which includes proper cleanup
+        // Use the enhanced auth service method which includes data cleanup
         await authService.value.deleteAccount(
           email: user.email!,
           password: currentPassword,
         );
 
+        // Close progress dialog
+        if (mounted) Navigator.of(context).pop();
+
         if (mounted) {
+          // Show success message briefly
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Account deleted successfully'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+
           // Navigate back to root to let AuthLayout handle the transition
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const AuthLayout()),
@@ -303,10 +563,14 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       }
     } on FirebaseAuthException catch (e) {
+      // Close progress dialog
+      if (mounted) Navigator.of(context).pop();
+
       String errorMessage;
-      if (e.code == 'requires-recent-login') {
-        errorMessage =
-            'Please log out and log back in before deleting your account!';
+      if (e.code == 'wrong-password') {
+        errorMessage = 'Current password is incorrect!';
+      } else if (e.code == 'requires-recent-login') {
+        errorMessage = 'Please log out and log back in before deleting your account!';
       } else {
         errorMessage = 'Failed to delete account: ${e.message}';
       }
@@ -317,6 +581,9 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     } catch (e) {
+      // Close progress dialog
+      if (mounted) Navigator.of(context).pop();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -329,6 +596,46 @@ class _ProfilePageState extends State<ProfilePage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  // Helper method to get appropriate icon for data type
+  Widget _getDataIcon(String dataType) {
+    switch (dataType) {
+      case 'medications':
+        return Icon(Icons.medication, color: Colors.blue, size: 20);
+      case 'tasks':
+        return Icon(Icons.task_alt, color: Colors.green, size: 20);
+      case 'symptoms':
+        return Icon(Icons.sick, color: Colors.orange, size: 20);
+      case 'doctors':
+        return Icon(Icons.local_hospital, color: Colors.red, size: 20);
+      case 'appointments':
+        return Icon(Icons.calendar_today, color: Colors.purple, size: 20);
+      case 'reminders':
+        return Icon(Icons.notifications, color: Colors.amber, size: 20);
+      default:
+        return Icon(Icons.data_object, color: Colors.grey, size: 20);
+    }
+  }
+
+  // Helper method to get appropriate label for data type
+  String _getDataLabel(String dataType, int count) {
+    switch (dataType) {
+      case 'medications':
+        return count == 1 ? 'medication record' : 'medication records';
+      case 'tasks':
+        return count == 1 ? 'task' : 'tasks';
+      case 'symptoms':
+        return count == 1 ? 'symptom entry' : 'symptom entries';
+      case 'doctors':
+        return count == 1 ? 'doctor record' : 'doctor records';
+      case 'appointments':
+        return count == 1 ? 'appointment' : 'appointments';
+      case 'reminders':
+        return count == 1 ? 'reminder' : 'reminders';
+      default:
+        return count == 1 ? 'record' : 'records';
     }
   }
 
