@@ -154,39 +154,6 @@ class GlobalHomeBar extends StatelessWidget {
               tooltip: 'Pills',
             ),
             IconButton(
-              icon: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.alarm,
-                    color: selectedIndex == 5 ? Colors.deepPurple : Colors.grey,
-                    size: 30,
-                  ),
-                  // Add a small test indicator
-                  if (selectedIndex == 5)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              onPressed: () {
-                if (selectedIndex != 5) {
-                  _navigateToPage(context, 5);
-                }
-                onTap?.call(5);
-              },
-              tooltip: 'Test Alarms',
-            ),
-            IconButton(
               icon: Icon(
                 Icons.settings,
                 color: selectedIndex == 6 ? Colors.deepPurple : Colors.grey,
