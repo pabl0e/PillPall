@@ -176,7 +176,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 SizedBox(height: 20),
-                // Symptoms row - FIXED with userId filter
+                // Symptoms row - FIXED with correct field name
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -193,7 +193,7 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                     SizedBox(width: 16),
-                    // Latest Symptoms Cards - FIXED
+                    // Latest Symptoms Cards - FIXED with correct field name
                     Expanded(
                       flex: 2,
                       child: StreamBuilder<QuerySnapshot>(
@@ -242,9 +242,18 @@ class _HomePageState extends State<HomePage> {
                             children: List.generate(2, (i) {
                               if (i < symptoms.length) {
                                 final data = symptoms[i].data() as Map<String, dynamic>;
+                                
+                                // ✅ FIXED: Use 'text' field instead of 'name' for symptoms
+                                final symptomText = data['text'] ?? data['name'] ?? 'Unknown Symptom';
+                                
+                                // ✅ ENHANCED: Truncate long symptom text for display
+                                final displayText = symptomText.length > 15 
+                                    ? '${symptomText.substring(0, 15)}...' 
+                                    : symptomText;
+                                
                                 return Expanded(
                                   child: _SquareTaskCard(
-                                    label: data['name'] ?? 'Unknown Symptom',
+                                    label: displayText,
                                     date: _formatDateWord(data['date']),
                                     time: _formatTimeAMPM(data['time']),
                                     onTap: () {
