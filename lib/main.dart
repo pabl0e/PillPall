@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pillpall/auth_layout.dart';
 import 'package:pillpall/login_page.dart';
 import 'package:pillpall/signup_page.dart';
+import 'package:pillpall/services/alarm_service.dart';
 
 import 'firebase_options.dart';
 
@@ -30,6 +31,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // ❌ REMOVED: Premature AlarmService initialization
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   AlarmService().initialize(context);
+    // });
+    
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'PillPall',
@@ -40,13 +46,44 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
       ),
-      home: const AuthLayout(
-        pageIfNotConnected: MyHomePage(
+      // ✅ ENHANCED: Use PersistentAuthWrapper to keep AuthLayout alive
+      home: PersistentAuthWrapper(
+        pageIfNotConnected: const MyHomePage(
           title: 'Welcome to PillPall!',
           key: ValueKey('welcome_page'),
         ),
       ),
     );
+  }
+}
+
+// ✅ NEW: Wrapper to keep AuthLayout persistent during navigation
+class PersistentAuthWrapper extends StatefulWidget {
+  final Widget? pageIfNotConnected;
+  
+  const PersistentAuthWrapper({
+    super.key,
+    this.pageIfNotConnected,
+  });
+
+  @override
+  State<PersistentAuthWrapper> createState() => _PersistentAuthWrapperState();
+}
+
+class _PersistentAuthWrapperState extends State<PersistentAuthWrapper> {
+  @override
+  Widget build(BuildContext context) {
+    print('🏗️ Building PersistentAuthWrapper - this should stay persistent');
+    
+    return AuthLayout(
+      pageIfNotConnected: widget.pageIfNotConnected,
+    );
+  }
+  
+  @override
+  void dispose() {
+    print('🗑️ PersistentAuthWrapper disposed - this should only happen on app exit');
+    super.dispose();
   }
 }
 
