@@ -1,16 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:pillpall/auth_service.dart'; // Import your auth service
 import 'package:pillpall/services/task_service.dart';
-import 'package:pillpall/services/doctor_service.dart';
 import 'package:pillpall/widget/doctor_list.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 import 'package:pillpall/widget/symptom_widget.dart';
 import 'package:pillpall/widget/task_widget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/auth_service.dart'; // Import your auth service
-
-void main() {
-  runApp(MaterialApp(home: HomePage(), debugShowCheckedModeBanner: false));
-}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,7 +17,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   DateTime _selectedDate = DateTime.now();
   final TaskService _taskService = TaskService();
-  final DoctorService _doctorService = DoctorService();
 
   // Helper method to get current user ID
   String? get _currentUserId => authService.value.currentUser?.uid;
@@ -108,7 +102,8 @@ class _HomePageState extends State<HomePage> {
                       child: StreamBuilder<QuerySnapshot>(
                         stream: _taskService.getTasks(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "Loading..."),
@@ -117,7 +112,7 @@ class _HomePageState extends State<HomePage> {
                               ],
                             );
                           }
-                          
+
                           if (snapshot.hasError) {
                             return Row(
                               children: [
@@ -127,8 +122,9 @@ class _HomePageState extends State<HomePage> {
                               ],
                             );
                           }
-                          
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "No tasks yet"),
@@ -137,12 +133,13 @@ class _HomePageState extends State<HomePage> {
                               ],
                             );
                           }
-                          
+
                           final tasks = snapshot.data!.docs.take(2).toList();
                           return Row(
                             children: List.generate(2, (i) {
                               if (i < tasks.length) {
-                                final data = tasks[i].data() as Map<String, dynamic>;
+                                final data =
+                                    tasks[i].data() as Map<String, dynamic>;
                                 return Expanded(
                                   child: _SquareTaskCard(
                                     label: data['title'] ?? 'Untitled Task',
@@ -199,14 +196,18 @@ class _HomePageState extends State<HomePage> {
                       child: StreamBuilder<QuerySnapshot>(
                         stream: _currentUserId != null
                             ? FirebaseFirestore.instance
-                                .collection('symptoms')
-                                .where('userId', isEqualTo: _currentUserId) // Filter by user
-                                .orderBy('createdAt', descending: true)
-                                .limit(2) // Limit to 2 for efficiency
-                                .snapshots()
+                                  .collection('symptoms')
+                                  .where(
+                                    'userId',
+                                    isEqualTo: _currentUserId,
+                                  ) // Filter by user
+                                  .orderBy('createdAt', descending: true)
+                                  .limit(2) // Limit to 2 for efficiency
+                                  .snapshots()
                             : Stream.empty(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "Loading..."),
@@ -215,19 +216,22 @@ class _HomePageState extends State<HomePage> {
                               ],
                             );
                           }
-                          
+
                           if (snapshot.hasError) {
                             print('Symptoms stream error: ${snapshot.error}');
                             return Row(
                               children: [
-                                _SquareTaskCard(label: "Error loading symptoms"),
+                                _SquareTaskCard(
+                                  label: "Error loading symptoms",
+                                ),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
-                          
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "No symptoms logged"),
@@ -236,12 +240,13 @@ class _HomePageState extends State<HomePage> {
                               ],
                             );
                           }
-                          
+
                           final symptoms = snapshot.data!.docs.take(2).toList();
                           return Row(
                             children: List.generate(2, (i) {
                               if (i < symptoms.length) {
-                                final data = symptoms[i].data() as Map<String, dynamic>;
+                                final data =
+                                    symptoms[i].data() as Map<String, dynamic>;
                                 return Expanded(
                                   child: _SquareTaskCard(
                                     label: data['name'] ?? 'Unknown Symptom',
@@ -296,14 +301,18 @@ class _HomePageState extends State<HomePage> {
                       child: StreamBuilder<QuerySnapshot>(
                         stream: _currentUserId != null
                             ? FirebaseFirestore.instance
-                                .collection('doctors')
-                                .where('userId', isEqualTo: _currentUserId) // Filter by user
-                                .orderBy('createdAt', descending: true)
-                                .limit(2) // Limit to 2 for efficiency
-                                .snapshots()
+                                  .collection('doctors')
+                                  .where(
+                                    'userId',
+                                    isEqualTo: _currentUserId,
+                                  ) // Filter by user
+                                  .orderBy('createdAt', descending: true)
+                                  .limit(2) // Limit to 2 for efficiency
+                                  .snapshots()
                             : Stream.empty(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "Loading..."),
@@ -312,7 +321,7 @@ class _HomePageState extends State<HomePage> {
                               ],
                             );
                           }
-                          
+
                           if (snapshot.hasError) {
                             print('Doctors stream error: ${snapshot.error}');
                             return Row(
@@ -323,8 +332,9 @@ class _HomePageState extends State<HomePage> {
                               ],
                             );
                           }
-                          
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "No doctors added"),
@@ -333,12 +343,13 @@ class _HomePageState extends State<HomePage> {
                               ],
                             );
                           }
-                          
+
                           final doctors = snapshot.data!.docs.take(2).toList();
                           return Row(
                             children: List.generate(2, (i) {
                               if (i < doctors.length) {
-                                final data = doctors[i].data() as Map<String, dynamic>;
+                                final data =
+                                    doctors[i].data() as Map<String, dynamic>;
                                 return Expanded(
                                   child: _SquareTaskCard(
                                     label: data['name'] ?? 'Unknown Doctor',
@@ -348,7 +359,8 @@ class _HomePageState extends State<HomePage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => DoctorListScreen(),
+                                          builder: (context) =>
+                                              DoctorListScreen(),
                                         ),
                                       );
                                     },
@@ -383,8 +395,19 @@ class _HomePageState extends State<HomePage> {
     final date = DateTime.tryParse(isoDate);
     if (date == null) return '';
     const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return "${months[date.month]} ${date.day}, ${date.year}";
   }
