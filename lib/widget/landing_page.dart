@@ -27,6 +27,20 @@ class _HomePageState extends State<HomePage> {
   // Helper method to get current user ID
   String? get _currentUserId => authService.value.currentUser?.uid;
 
+  // Helper method to get severity color
+  Color _getSeverityColor(String? severity) {
+    switch (severity?.toLowerCase()) {
+      case 'mild':
+        return Colors.green;
+      case 'moderate':
+        return Colors.orange;
+      case 'severe':
+        return Colors.red;
+      default:
+        return Colors.deepPurple;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 SizedBox(height: 20),
-                // Symptoms row - FIXED with correct field name
+                // Symptoms row - ENHANCED with time and severity
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -193,7 +207,7 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                     SizedBox(width: 16),
-                    // Latest Symptoms Cards - FIXED with correct field name
+                    // Latest Symptoms Cards - ENHANCED with time and severity
                     Expanded(
                       flex: 2,
                       child: StreamBuilder<QuerySnapshot>(
@@ -243,19 +257,22 @@ class _HomePageState extends State<HomePage> {
                               if (i < symptoms.length) {
                                 final data = symptoms[i].data() as Map<String, dynamic>;
                                 
-                                // ✅ FIXED: Use 'text' field instead of 'name' for symptoms
+                                // ✅ ENHANCED: Get symptom details
                                 final symptomText = data['text'] ?? data['name'] ?? 'Unknown Symptom';
+                                final severity = data['severity'] as String?;
+                                final time = data['time'] as String?;
                                 
                                 // ✅ ENHANCED: Truncate long symptom text for display
-                                final displayText = symptomText.length > 15 
-                                    ? '${symptomText.substring(0, 15)}...' 
+                                final displayText = symptomText.length > 12 
+                                    ? '${symptomText.substring(0, 12)}...' 
                                     : symptomText;
                                 
                                 return Expanded(
-                                  child: _SquareTaskCard(
+                                  child: _SymptomCard(
                                     label: displayText,
-                                    date: _formatDateWord(data['date']),
-                                    time: _formatTimeAMPM(data['time']),
+                                    time: _formatTimeAMPM(time),
+                                    severity: severity,
+                                    severityColor: _getSeverityColor(severity),
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -411,6 +428,140 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       return 'Invalid time';
     }
+  }
+}
+
+// ✅ NEW: Enhanced Symptom Card Widget
+class _SymptomCard extends StatelessWidget {
+  final String label;
+  final String? time;
+  final String? severity;
+  final Color severityColor;
+  final VoidCallback? onTap;
+
+  const _SymptomCard({
+    required this.label,
+    this.time,
+    this.severity,
+    this.severityColor = Colors.deepPurple,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 120,
+          margin: EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+            // ✅ ENHANCED: Add subtle border with severity color
+            border: Border.all(
+              color: severityColor.withOpacity(0.3),
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // ✅ ENHANCED: Symptom name with severity indicator
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Severity dot indicator
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: severityColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  SizedBox(height: 8),
+                  
+                  // ✅ ENHANCED: Time display
+                  if (time != null && time!.isNotEmpty)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 12,
+                          color: Colors.teal,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          time!,
+                          style: TextStyle(
+                            color: Colors.teal,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  
+                  SizedBox(height: 4),
+                  
+                  // ✅ ENHANCED: Severity display
+                  if (severity != null && severity!.isNotEmpty)
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: severityColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: severityColor.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        severity!.toUpperCase(),
+                        style: TextStyle(
+                          color: severityColor,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
