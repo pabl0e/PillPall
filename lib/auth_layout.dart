@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pillpall/auth_service.dart';
-import 'package:pillpall/services/alarm_service.dart';
 import 'package:pillpall/login_page.dart';
-import 'package:pillpall/widget/task_widget.dart';
+import 'package:pillpall/services/alarm_service.dart';
+import 'package:pillpall/widget/landing_page.dart';
 
 class AuthLayout extends StatefulWidget {
   const AuthLayout({super.key, this.pageIfNotConnected});
@@ -36,7 +36,7 @@ class _AuthLayoutState extends State<AuthLayout> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     // Don't dispose alarm service when app goes to background
     if (state == AppLifecycleState.paused) {
       print('📱 App paused - keeping AlarmService running');
@@ -51,12 +51,14 @@ class _AuthLayoutState extends State<AuthLayout> with WidgetsBindingObserver {
   void _initializeAlarmServiceIfNeeded() {
     // Enhanced validation - only initialize if user is authenticated
     if (!mounted || _currentUser == null) {
-      print('⚠️ Cannot initialize AlarmService: ${!mounted ? 'Widget not mounted' : 'No authenticated user'}');
+      print(
+        '⚠️ Cannot initialize AlarmService: ${!mounted ? 'Widget not mounted' : 'No authenticated user'}',
+      );
       return;
     }
 
     final userId = _currentUser!.uid;
-    
+
     // Don't reinitialize for the same user
     if (_alarmServiceInitialized && _lastInitializedUserId == userId) {
       print('ℹ️ AlarmService already initialized for user: $userId');
@@ -69,7 +71,9 @@ class _AuthLayoutState extends State<AuthLayout> with WidgetsBindingObserver {
       _disposeAlarmServiceIfNeeded();
     }
 
-    print('🚀 Preparing to initialize AlarmService for authenticated user: $userId');
+    print(
+      '🚀 Preparing to initialize AlarmService for authenticated user: $userId',
+    );
 
     // Use PostFrameCallback to ensure widget tree is fully built
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -78,7 +82,7 @@ class _AuthLayoutState extends State<AuthLayout> with WidgetsBindingObserver {
         try {
           print('🔧 Initializing AlarmService...');
           AlarmService().initialize(context);
-          
+
           if (mounted) {
             setState(() {
               _alarmServiceInitialized = true;
@@ -97,7 +101,9 @@ class _AuthLayoutState extends State<AuthLayout> with WidgetsBindingObserver {
           }
         }
       } else {
-        print('⚠️ Context changed during initialization - skipping AlarmService setup');
+        print(
+          '⚠️ Context changed during initialization - skipping AlarmService setup',
+        );
       }
     });
   }
@@ -128,11 +134,11 @@ class _AuthLayoutState extends State<AuthLayout> with WidgetsBindingObserver {
           stream: authServiceValue.authStateChanges,
           builder: (context, snapshot) {
             Widget widget;
-            
+
             // Track current user state
             final newUser = snapshot.data;
             final userChanged = _currentUser?.uid != newUser?.uid;
-            
+
             // Show loading while waiting for auth state
             if (snapshot.connectionState == ConnectionState.waiting) {
               print('⏳ Waiting for authentication state...');
@@ -153,21 +159,23 @@ class _AuthLayoutState extends State<AuthLayout> with WidgetsBindingObserver {
               // User is authenticated
               final previousUser = _currentUser;
               _currentUser = snapshot.data;
-              
+
               // Log user authentication
               if (userChanged) {
                 print('👤 User authenticated: ${_currentUser!.uid}');
                 if (previousUser != null) {
-                  print('🔄 User changed from ${previousUser.uid} to ${_currentUser!.uid}');
+                  print(
+                    '🔄 User changed from ${previousUser.uid} to ${_currentUser!.uid}',
+                  );
                 }
               }
-              
+
               // Only initialize if user actually changed or service not initialized
               if (userChanged || !_alarmServiceInitialized) {
                 _initializeAlarmServiceIfNeeded();
               }
-              
-              widget = const Task_Widget(key: ValueKey('task_widget'));
+
+              widget = const HomePage(key: ValueKey('home_page'));
             } else {
               // User is not authenticated - dispose alarm service
               if (_currentUser != null) {
@@ -175,7 +183,7 @@ class _AuthLayoutState extends State<AuthLayout> with WidgetsBindingObserver {
                 _currentUser = null;
                 _disposeAlarmServiceIfNeeded();
               }
-              
+
               widget = this.widget.pageIfNotConnected != null
                   ? this.widget.pageIfNotConnected!
                   : const LoginPage(key: ValueKey('login_page'));
