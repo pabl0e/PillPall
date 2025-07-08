@@ -207,7 +207,7 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                     SizedBox(width: 16),
-                    // Latest Symptoms Cards - ENHANCED with time and severity
+                    // Latest Symptoms Cards - FIXED time display
                     Expanded(
                       flex: 2,
                       child: StreamBuilder<QuerySnapshot>(
@@ -257,10 +257,36 @@ class _HomePageState extends State<HomePage> {
                               if (i < symptoms.length) {
                                 final data = symptoms[i].data() as Map<String, dynamic>;
                                 
-                                // ✅ ENHANCED: Get symptom details
+                                // ✅ ENHANCED: Get symptom details with debugging
                                 final symptomText = data['text'] ?? data['name'] ?? 'Unknown Symptom';
                                 final severity = data['severity'] as String?;
-                                final time = data['time'] as String?;
+                                
+                                // ✅ FIXED: Better time handling with multiple fallbacks
+                                String? displayTime;
+                                
+                                // Try different time field names and formats
+                                final timeField = data['time'];
+                                final dateField = data['date'];
+                                final createdAtField = data['createdAt'];
+                                
+                                print('🐛 Symptom data for ${symptomText}:');
+                                print('  - time field: $timeField');
+                                print('  - date field: $dateField');
+                                print('  - createdAt field: $createdAtField');
+                                print('  - severity: $severity');
+                                
+                                // Try to get time from various sources
+                                if (timeField != null && timeField.toString().isNotEmpty) {
+                                  displayTime = _formatSymptomTime(timeField.toString());
+                                } else if (createdAtField != null) {
+                                  // If no time field, try to extract time from createdAt timestamp
+                                  displayTime = _formatTimestampTime(createdAtField);
+                                } else if (dateField != null) {
+                                  // Try to extract time from date field if it contains time
+                                  displayTime = _formatDateTimeField(dateField.toString());
+                                }
+                                
+                                print('  - final displayTime: $displayTime');
                                 
                                 // ✅ ENHANCED: Truncate long symptom text for display
                                 final displayText = symptomText.length > 12 
@@ -270,7 +296,7 @@ class _HomePageState extends State<HomePage> {
                                 return Expanded(
                                   child: _SymptomCard(
                                     label: displayText,
-                                    time: _formatTimeAMPM(time),
+                                    time: displayTime,
                                     severity: severity,
                                     severityColor: _getSeverityColor(severity),
                                     onTap: () {
@@ -429,9 +455,82 @@ class _HomePageState extends State<HomePage> {
       return 'Invalid time';
     }
   }
+
+  // ✅ NEW: Enhanced time formatting specifically for symptoms
+  String? _formatSymptomTime(String timeStr) {
+    if (timeStr.isEmpty) return null;
+    
+    try {
+      // Handle HH:MM format
+      if (timeStr.contains(':')) {
+        final parts = timeStr.split(':');
+        if (parts.length >= 2) {
+          int hour = int.parse(parts[0]);
+          int minute = int.parse(parts[1]);
+          final ampm = hour >= 12 ? 'PM' : 'AM';
+          hour = hour % 12 == 0 ? 12 : hour % 12;
+          final minuteStr = minute.toString().padLeft(2, '0');
+          return '$hour:$minuteStr $ampm';
+        }
+      }
+      
+      // Handle other time formats
+      return timeStr; // Return as-is if we can't parse it
+    } catch (e) {
+      print('Error formatting symptom time: $e');
+      return timeStr; // Return original if parsing fails
+    }
+  }
+
+  // ✅ NEW: Format time from Firestore timestamp
+  String? _formatTimestampTime(dynamic timestamp) {
+    try {
+      DateTime? dateTime;
+      
+      if (timestamp is Timestamp) {
+        dateTime = timestamp.toDate();
+      } else if (timestamp is String) {
+        dateTime = DateTime.tryParse(timestamp);
+      }
+      
+      if (dateTime != null) {
+        final hour = dateTime.hour;
+        final minute = dateTime.minute;
+        final ampm = hour >= 12 ? 'PM' : 'AM';
+        final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+        final minuteStr = minute.toString().padLeft(2, '0');
+        return '$displayHour:$minuteStr $ampm';
+      }
+    } catch (e) {
+      print('Error formatting timestamp time: $e');
+    }
+    return null;
+  }
+
+  // ✅ NEW: Format time from date field that might contain time
+  String? _formatDateTimeField(String dateStr) {
+    try {
+      final dateTime = DateTime.tryParse(dateStr);
+      if (dateTime != null) {
+        final hour = dateTime.hour;
+        final minute = dateTime.minute;
+        
+        // Only return time if it's not midnight (00:00)
+        if (hour != 0 || minute != 0) {
+          final ampm = hour >= 12 ? 'PM' : 'AM';
+          final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+          final minuteStr = minute.toString().padLeft(2, '0');
+          return '$displayHour:$minuteStr $ampm';
+        }
+      }
+    } catch (e) {
+      print('Error formatting date-time field: $e');
+    }
+    return null;
+  }
 }
 
-// ✅ NEW: Enhanced Symptom Card Widget
+// ✅ ENHANCED: Symptom Card Widget with better time handling
 class _SymptomCard extends StatelessWidget {
   final String label;
   final String? time;
@@ -509,8 +608,8 @@ class _SymptomCard extends StatelessWidget {
                   
                   SizedBox(height: 8),
                   
-                  // ✅ ENHANCED: Time display
-                  if (time != null && time!.isNotEmpty)
+                  // ✅ ENHANCED: Time display with better fallback
+                  if (time != null && time!.isNotEmpty) ...[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -530,8 +629,30 @@ class _SymptomCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                  
-                  SizedBox(height: 4),
+                    SizedBox(height: 4),
+                  ] else ...[
+                    // ✅ NEW: Show placeholder when no time available
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 12,
+                          color: Colors.grey[400],
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'No time',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 10,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                  ],
                   
                   // ✅ ENHANCED: Severity display
                   if (severity != null && severity!.isNotEmpty)
