@@ -177,14 +177,6 @@ class _Medication_WidgetState extends State<Medication_Widget> {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // Debug button with unique hero tag
-          FloatingActionButton(
-            heroTag: "debug_fab", // Unique hero tag
-            onPressed: () => DebugHelper.showDebugInfo(context), // ✅ FIXED: Updated method name
-            child: Icon(Icons.bug_report),
-            backgroundColor: Colors.orange,
-            tooltip: 'Debug Alarm Service',
-          ),
           SizedBox(height: 16),
           
           // Original add medication button with unique hero tag
