@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pillpall/auth_service.dart'; // Import your auth service
 import 'package:pillpall/services/task_service.dart';
+import 'package:pillpall/models/task_model.dart'; // Ensure TaskModel is imported
 import 'package:pillpall/widget/doctor_list.dart';
 import 'package:pillpall/widget/global_homebar.dart';
 import 'package:pillpall/widget/symptom_widget.dart';
@@ -113,7 +114,7 @@ class _HomePageState extends State<HomePage> {
                     // Latest Tasks Cards - FIXED
                     Expanded(
                       flex: 2,
-                      child: StreamBuilder<QuerySnapshot>(
+                      child: StreamBuilder<List<TaskModel>>(
                         stream: _taskService.getTasks(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
@@ -137,8 +138,7 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
-                          if (!snapshot.hasData ||
-                              snapshot.data!.docs.isEmpty) {
+                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "No tasks yet"),
@@ -148,18 +148,18 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
-                          final tasks = snapshot.data!.docs.take(2).toList();
+                          final tasks = snapshot.data!.take(2).toList();
                           return Row(
                             children: List.generate(2, (i) {
                               if (i < tasks.length) {
-                                final data =
-                                    tasks[i].data() as Map<String, dynamic>;
+                                final task = tasks[i];
                                 return Expanded(
                                   child: _SquareTaskCard(
-                                    label: data['title'] ?? 'Untitled Task',
+                                    label: task.title,
                                     icon: Icons.task_alt,
-                                    date: _formatDateWord(data['startDate']),
-                                    time: _formatTimeAMPM(data['startTime']),
+                                    date: _formatDateWord(task.date),
+                                    time:
+                                        '', // If you have a time field, use it here
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -259,44 +259,55 @@ class _HomePageState extends State<HomePage> {
                           return Row(
                             children: List.generate(2, (i) {
                               if (i < symptoms.length) {
-                                final data = symptoms[i].data() as Map<String, dynamic>;
-                                
+                                final data =
+                                    symptoms[i].data() as Map<String, dynamic>;
+
                                 // ✅ ENHANCED: Get symptom details with debugging
-                                final symptomText = data['text'] ?? data['name'] ?? 'Unknown Symptom';
+                                final symptomText =
+                                    data['text'] ??
+                                    data['name'] ??
+                                    'Unknown Symptom';
                                 final severity = data['severity'] as String?;
-                                
+
                                 // ✅ FIXED: Better time handling with multiple fallbacks
                                 String? displayTime;
-                                
+
                                 // Try different time field names and formats
                                 final timeField = data['time'];
                                 final dateField = data['date'];
                                 final createdAtField = data['createdAt'];
-                                
+
                                 print('🐛 Symptom data for ${symptomText}:');
                                 print('  - time field: $timeField');
                                 print('  - date field: $dateField');
                                 print('  - createdAt field: $createdAtField');
                                 print('  - severity: $severity');
-                                
+
                                 // Try to get time from various sources
-                                if (timeField != null && timeField.toString().isNotEmpty) {
-                                  displayTime = _formatSymptomTime(timeField.toString());
+                                if (timeField != null &&
+                                    timeField.toString().isNotEmpty) {
+                                  displayTime = _formatSymptomTime(
+                                    timeField.toString(),
+                                  );
                                 } else if (createdAtField != null) {
                                   // If no time field, try to extract time from createdAt timestamp
-                                  displayTime = _formatTimestampTime(createdAtField);
+                                  displayTime = _formatTimestampTime(
+                                    createdAtField,
+                                  );
                                 } else if (dateField != null) {
                                   // Try to extract time from date field if it contains time
-                                  displayTime = _formatDateTimeField(dateField.toString());
+                                  displayTime = _formatDateTimeField(
+                                    dateField.toString(),
+                                  );
                                 }
-                                
+
                                 print('  - final displayTime: $displayTime');
-                                
+
                                 // ✅ ENHANCED: Truncate long symptom text for display
-                                final displayText = symptomText.length > 12 
-                                    ? '${symptomText.substring(0, 12)}...' 
+                                final displayText = symptomText.length > 12
+                                    ? '${symptomText.substring(0, 12)}...'
                                     : symptomText;
-                                
+
                                 return Expanded(
                                   child: _SymptomCard(
                                     label: displayText,
@@ -481,7 +492,7 @@ class _HomePageState extends State<HomePage> {
   // ✅ NEW: Enhanced time formatting specifically for symptoms
   String? _formatSymptomTime(String timeStr) {
     if (timeStr.isEmpty) return null;
-    
+
     try {
       // Handle HH:MM format
       if (timeStr.contains(':')) {
@@ -495,7 +506,7 @@ class _HomePageState extends State<HomePage> {
           return '$hour:$minuteStr $ampm';
         }
       }
-      
+
       // Handle other time formats
       return timeStr; // Return as-is if we can't parse it
     } catch (e) {
@@ -508,13 +519,13 @@ class _HomePageState extends State<HomePage> {
   String? _formatTimestampTime(dynamic timestamp) {
     try {
       DateTime? dateTime;
-      
+
       if (timestamp is Timestamp) {
         dateTime = timestamp.toDate();
       } else if (timestamp is String) {
         dateTime = DateTime.tryParse(timestamp);
       }
-      
+
       if (dateTime != null) {
         final hour = dateTime.hour;
         final minute = dateTime.minute;
@@ -536,7 +547,7 @@ class _HomePageState extends State<HomePage> {
       if (dateTime != null) {
         final hour = dateTime.hour;
         final minute = dateTime.minute;
-        
+
         // Only return time if it's not midnight (00:00)
         if (hour != 0 || minute != 0) {
           final ampm = hour >= 12 ? 'PM' : 'AM';
@@ -587,10 +598,7 @@ class _SymptomCard extends StatelessWidget {
               ),
             ],
             // ✅ ENHANCED: Add subtle border with severity color
-            border: Border.all(
-              color: severityColor.withOpacity(0.3),
-              width: 2,
-            ),
+            border: Border.all(color: severityColor.withOpacity(0.3), width: 2),
           ),
           child: Center(
             child: Padding(
@@ -627,19 +635,15 @@ class _SymptomCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   SizedBox(height: 8),
-                  
+
                   // ✅ ENHANCED: Time display with better fallback
                   if (time != null && time!.isNotEmpty) ...[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 12,
-                          color: Colors.teal,
-                        ),
+                        Icon(Icons.access_time, size: 12, color: Colors.teal),
                         SizedBox(width: 4),
                         Text(
                           time!,
@@ -675,7 +679,7 @@ class _SymptomCard extends StatelessWidget {
                     ),
                     SizedBox(height: 4),
                   ],
-                  
+
                   // ✅ ENHANCED: Severity display
                   if (severity != null && severity!.isNotEmpty)
                     Container(
