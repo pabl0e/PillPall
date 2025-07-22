@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pillpall/services/alarm_service.dart';
 import 'package:pillpall/services/medication_service.dart';
+import 'package:pillpall/services/auth_service.dart';
 import 'package:pillpall/models/medication_model.dart'; // Add this import if MedicationModel is defined here
 import 'package:pillpall/utils/medication_alarm_helper.dart';
 import 'package:pillpall/views/global_homebar.dart';
@@ -18,13 +19,8 @@ class _Medication_WidgetState extends State<Medication_Widget> {
   final MedicationService _medicationService = MedicationService();
   bool _isLoading = false;
 
-  // Returns the current user's ID (replace with your actual user ID logic if needed)
-  String _getCurrentUserId() {
-    // Example using FirebaseAuth, adjust as needed for your app
-    // import 'package:firebase_auth/firebase_auth.dart';
-    // return FirebaseAuth.instance.currentUser?.uid ?? '';
-    return 'demoUserId'; // Replace with actual user ID retrieval
-  }
+  // Returns the current user's ID
+  String? get _currentUserId => authService.value.currentUser?.uid;
 
   // Method to get medications for selected date
   Stream<List<MedicationModel>> _getMedicationsForDate(DateTime date) {
@@ -245,6 +241,11 @@ class _Medication_WidgetState extends State<Medication_Widget> {
       'date': medication.date,
       'time': medication.time,
     });
+
+    return Card(
+      margin: EdgeInsets.only(bottom: 12),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -331,28 +332,23 @@ class _Medication_WidgetState extends State<Medication_Widget> {
               ],
             ),
             SizedBox(height: 12),
-<<<<<<< HEAD:lib/widget/medication_widget.dart
-=======
 
             // Medication Details
-                  children: [
-                    Icon(Icons.science, color: Colors.blue, size: 18),
-                    SizedBox(width: 4),
-                    Text(
-                      'Dosage: $dosage',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+            Row(
+              children: [
+                Icon(Icons.science, color: Colors.blue, size: 18),
+                SizedBox(width: 4),
+                Text(
+                  'Dosage: $dosage',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-<<<<<<< HEAD:lib/widget/medication_widget.dart
-=======
+              ],
+            ),
 
             // Time Info
->>>>>>> origin/dev1:lib/views/medication_page.dart
             if (time.isNotEmpty)
               Row(
                 children: [
@@ -367,14 +363,10 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                   ),
                 ],
               ),
-<<<<<<< HEAD:lib/widget/medication_widget.dart
-            SizedBox(height: 16),
-=======
 
             SizedBox(height: 16),
 
             // Action Buttons Row
->>>>>>> origin/dev1:lib/views/medication_page.dart
             Row(
               children: [
                 Expanded(
@@ -575,26 +567,25 @@ class _Medication_WidgetState extends State<Medication_Widget> {
 
                     try {
                       await _medicationService.addMedication(
-<<<<<<< HEAD:lib/widget/medication_widget.dart
                         MedicationModel(
                           name: nameController.text.trim(),
                           dosage: dosageController.text.trim(),
                           date: selectedDate.toIso8601String().split('T')[0],
                           time:
                               '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
-                          userId:
-                              _getCurrentUserId(), // Add this line to provide userId
+                          userId: _currentUserId ?? '',
                         ),
-=======
-                        dosage: dosageController.text.trim(),
-                        date: selectedDate,
-                        time:
-                            '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
->>>>>>> origin/dev1:lib/views/medication_page.dart
                       );
 
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Medication added successfully!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      print('Error adding medication: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(

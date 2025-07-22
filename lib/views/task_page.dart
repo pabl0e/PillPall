@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/views/global_homebar.dart';
 import 'package:pillpall/services/task_service.dart';
 
 class Task_Widget extends StatefulWidget {
@@ -21,18 +21,78 @@ class _Task_WidgetState extends State<Task_Widget> {
     return _taskService.getTasksForDate(dateString);
   }
 
-  void _toggleTodoItem(String taskId, int todoIndex, bool isCompleted) {
-    _taskService.toggleTodoItem(taskId, todoIndex, isCompleted);
+  Future<void> _toggleTaskCompletion(String taskId, bool isCompleted) async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('tasks')
+          .doc(taskId)
+          .get();
+
+      if (doc.exists) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        List<String> todos = List<String>.from(data['todos'] ?? []);
+        List<bool> todosChecked = List.filled(todos.length, isCompleted);
+
+        await FirebaseFirestore.instance
+            .collection('tasks')
+            .doc(taskId)
+            .update({
+          'todosChecked': todosChecked,
+          'isCompleted': isCompleted,
+          'completedAt': isCompleted ? FieldValue.serverTimestamp() : null,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      print('Error toggling task completion: $e');
+    }
   }
 
-  void _toggleTaskCompletion(String taskId, bool isCompleted) {
-    _taskService.toggleTaskCompletion(taskId, isCompleted);
+  double _calculateTaskCompletionPercentage(Map<String, dynamic> taskData) {
+    final todos = taskData['todos'] as List?;
+    final todosChecked = taskData['todosChecked'] as List?;
+    
+    if (todos == null || todos.isEmpty) return 0.0;
+    if (todosChecked == null) return 0.0;
+    
+    int completedCount = 0;
+    for (int i = 0; i < todos.length && i < todosChecked.length; i++) {
+      if (todosChecked[i] == true) {
+        completedCount++;
+      }
+    }
+    
+    return completedCount / todos.length;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFFFDDED),
+      appBar: AppBar(
+        backgroundColor: Color(0xFFFFDDED),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.deepPurple[900],
+            size: 28,
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          tooltip: 'Back to Home',
+        ),
+        title: Text(
+          'Tasks',
+          style: TextStyle(
+            color: Colors.deepPurple[900],
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -228,7 +288,7 @@ class _Task_WidgetState extends State<Task_Widget> {
   Widget _buildTaskCard(DocumentSnapshot task) {
     final taskId = task.id;
     final taskData = task.data() as Map<String, dynamic>;
-    final completionPercentage = _taskService.getTaskCompletionPercentage(taskData);
+    final completionPercentage = _calculateTaskCompletionPercentage(taskData);
     final isFullyCompleted = completionPercentage == 1.0;
 
     return Card(
@@ -463,7 +523,27 @@ class _Task_WidgetState extends State<Task_Widget> {
     bool isChecked,
   ) async {
     try {
-      await _taskService.toggleTodoItem(taskId, todoIndex, isChecked);
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('tasks')
+          .doc(taskId)
+          .get();
+
+      if (doc.exists) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        List<bool> todosChecked = List<bool>.from(data['todosChecked'] ?? []);
+        
+        if (todoIndex < todosChecked.length) {
+          todosChecked[todoIndex] = isChecked;
+          
+          await FirebaseFirestore.instance
+              .collection('tasks')
+              .doc(taskId)
+              .update({
+            'todosChecked': todosChecked,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
     } catch (e) {
       print('Error toggling todo item: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -489,13 +569,33 @@ class _Task_WidgetState extends State<Task_Widget> {
         break;
       case 'mark_complete':
         try {
-          await _taskService.toggleTaskCompletion(taskId, true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Task marked as complete!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          DocumentSnapshot doc = await FirebaseFirestore.instance
+              .collection('tasks')
+              .doc(taskId)
+              .get();
+
+          if (doc.exists) {
+            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            List<String> todos = List<String>.from(data['todos'] ?? []);
+            List<bool> todosChecked = List.filled(todos.length, true);
+
+            await FirebaseFirestore.instance
+                .collection('tasks')
+                .doc(taskId)
+                .update({
+              'todosChecked': todosChecked,
+              'isCompleted': true,
+              'completedAt': FieldValue.serverTimestamp(),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Task marked as complete!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -507,13 +607,33 @@ class _Task_WidgetState extends State<Task_Widget> {
         break;
       case 'mark_incomplete':
         try {
-          await _taskService.toggleTaskCompletion(taskId, false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Task marked as incomplete'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          DocumentSnapshot doc = await FirebaseFirestore.instance
+              .collection('tasks')
+              .doc(taskId)
+              .get();
+
+          if (doc.exists) {
+            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            List<String> todos = List<String>.from(data['todos'] ?? []);
+            List<bool> todosChecked = List.filled(todos.length, false);
+
+            await FirebaseFirestore.instance
+                .collection('tasks')
+                .doc(taskId)
+                .update({
+              'todosChecked': todosChecked,
+              'isCompleted': false,
+              'completedAt': null,
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Task marked as incomplete'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1050,16 +1170,21 @@ class _Task_WidgetState extends State<Task_Widget> {
                             : false;
                       });
 
-                      await _taskService.updateTask(
-                        taskId,
-                        title: titleController.text.trim(),
-                        startDate: startDate,
-                        endDate: endDate,
-                        startTime: startTime.format(context),
-                        endTime: endTime.format(context),
-                        todos: todos,
-                        todosChecked: todosChecked,
-                      );
+                      await FirebaseFirestore.instance
+                          .collection('tasks')
+                          .doc(taskId)
+                          .update({
+                        'title': titleController.text.trim(),
+                        'startDate': startDate.toIso8601String(),
+                        'endDate': endDate.toIso8601String(),
+                        'startDateOnly': startDate.toIso8601String().split('T')[0],
+                        'endDateOnly': endDate.toIso8601String().split('T')[0],
+                        'startTime': startTime.format(context),
+                        'endTime': endTime.format(context),
+                        'todos': todos,
+                        'todosChecked': todosChecked,
+                        'updatedAt': FieldValue.serverTimestamp(),
+                      });
 
                       for (var controller in todoControllers) {
                         controller.dispose();
@@ -1115,7 +1240,11 @@ class _Task_WidgetState extends State<Task_Widget> {
 
     if (confirm == true) {
       try {
-        await _taskService.deleteTask(taskId);
+        await FirebaseFirestore.instance
+            .collection('tasks')
+            .doc(taskId)
+            .delete();
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Task deleted successfully!'),

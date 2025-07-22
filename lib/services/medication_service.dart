@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/auth_service.dart';
+import 'package:pillpall/services/auth_service.dart';
 import 'package:pillpall/models/medication_model.dart';
 
 class MedicationService {
