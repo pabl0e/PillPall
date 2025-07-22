@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pillpall/views/global_homebar.dart';
 import 'package:pillpall/services/task_service.dart';
+import 'package:pillpall/services/alarm_service.dart';
+import 'package:pillpall/utils/task_alarm_helper.dart';
 
 class Task_Widget extends StatefulWidget {
   const Task_Widget({super.key});
@@ -284,12 +286,14 @@ class _Task_WidgetState extends State<Task_Widget> {
     );
   }
 
-  // Enhanced task card with completion tracking
+  // Enhanced task card with completion tracking and alarm functionality
   Widget _buildTaskCard(DocumentSnapshot task) {
     final taskId = task.id;
     final taskData = task.data() as Map<String, dynamic>;
     final completionPercentage = _calculateTaskCompletionPercentage(taskData);
     final isFullyCompleted = completionPercentage == 1.0;
+    final isDueNow = TaskAlarmHelper.isTaskDueNow(taskData);
+    final isActive = TaskAlarmHelper.isTaskActive(taskData);
 
     return Card(
       margin: EdgeInsets.only(bottom: 12),
@@ -305,7 +309,13 @@ class _Task_WidgetState extends State<Task_Widget> {
               children: [
                 Icon(
                   isFullyCompleted ? Icons.task_alt : Icons.task_outlined,
-                  color: isFullyCompleted ? Colors.green : Colors.deepPurple,
+                  color: isDueNow 
+                    ? Colors.red 
+                    : isActive 
+                      ? Colors.orange 
+                      : isFullyCompleted 
+                        ? Colors.green 
+                        : Colors.deepPurple,
                   size: 24,
                 ),
                 SizedBox(width: 8),
@@ -315,19 +325,57 @@ class _Task_WidgetState extends State<Task_Widget> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple[900],
+                      color: isDueNow 
+                        ? Colors.red[900] 
+                        : isActive 
+                          ? Colors.orange[900] 
+                          : Colors.deepPurple[900],
                       decoration: isFullyCompleted
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
                   ),
                 ),
+                // Status indicators
+                if (isDueNow)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'DUE NOW!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else if (isActive)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'ACTIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 // Completion percentage
                 if (taskData['todos'] != null && (taskData['todos'] as List).isNotEmpty)
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: EdgeInsets.only(left: 8),
                     decoration: BoxDecoration(
-                      color: isFullyCompleted ? Colors.green : Colors.orange,
+                      color: isFullyCompleted ? Colors.green : Colors.deepPurple,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -343,6 +391,16 @@ class _Task_WidgetState extends State<Task_Widget> {
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleMenuAction(value, taskId, taskData),
                   itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'test_alarm',
+                      child: Row(
+                        children: [
+                          Icon(Icons.alarm, color: Colors.orange),
+                          SizedBox(width: 8),
+                          Text('Test Alarm'),
+                        ],
+                      ),
+                    ),
                     PopupMenuItem(
                       value: isFullyCompleted
                           ? 'mark_incomplete'
@@ -493,6 +551,46 @@ class _Task_WidgetState extends State<Task_Widget> {
                   ),
                 ],
               ),
+
+            SizedBox(height: 16),
+
+            // Action Buttons Row
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _testTaskAlarm(taskId, taskData),
+                    icon: Icon(Icons.alarm, size: 18),
+                    label: Text('Test Alarm'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                if (isDueNow || isActive)
+                  ElevatedButton(
+                    onPressed: () => _triggerTaskAlarmNow(taskId, taskData),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDueNow ? Colors.red : Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(isDueNow ? 'START NOW' : 'VIEW ACTIVE'),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -555,6 +653,24 @@ class _Task_WidgetState extends State<Task_Widget> {
     }
   }
 
+  // Test task alarm method
+  void _testTaskAlarm(String taskId, Map<String, dynamic> taskData) {
+    AlarmService().triggerTaskAlarm(
+      context,
+      taskId: taskId,
+      taskData: taskData,
+    );
+  }
+
+  // Trigger task alarm for due/active task
+  void _triggerTaskAlarmNow(String taskId, Map<String, dynamic> taskData) {
+    AlarmService().triggerTaskAlarm(
+      context,
+      taskId: taskId,
+      taskData: taskData,
+    );
+  }
+
   Future<void> _handleMenuAction(
     String action,
     String taskId,
@@ -563,6 +679,9 @@ class _Task_WidgetState extends State<Task_Widget> {
     print('🔧 Menu action: $action for task $taskId');
     
     switch (action) {
+      case 'test_alarm':
+        _testTaskAlarm(taskId, taskData);
+        break;
       case 'edit':
         print('🔧 Opening edit dialog for task: ${taskData['title']}');
         await _showEditTaskDialog(taskId, taskData);

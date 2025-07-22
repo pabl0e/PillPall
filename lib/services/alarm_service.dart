@@ -393,6 +393,154 @@ class AlarmService {
     _showMedicationAlarm(context, medicationId, medicationData);
   }
 
+  // Manual trigger for task alarms
+  void triggerTaskAlarm(
+    BuildContext context, {
+    required String taskId,
+    required Map<String, dynamic> taskData,
+  }) {
+    if (!_isInitialized) {
+      print('❌ Cannot trigger task alarm: AlarmService not initialized');
+      return;
+    }
+
+    print('🧪 Manual trigger for task alarm: ${taskData['title']}');
+    _showTaskAlarm(context, taskId, taskData);
+  }
+
+  // Show task alarm dialog
+  void _showTaskAlarm(
+    BuildContext context,
+    String taskId,
+    Map<String, dynamic> taskData,
+  ) {
+    if (!context.mounted) return;
+    
+    final taskTitle = taskData['title'] ?? 'Untitled Task';
+    final startTime = taskData['startTime'] ?? '';
+    final endTime = taskData['endTime'] ?? '';
+    final todos = taskData['todos'] as List? ?? [];
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.task_alt, color: Colors.deepPurple, size: 28),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Task Reminder',
+                  style: TextStyle(
+                    color: Colors.deepPurple,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                taskTitle,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              SizedBox(height: 12),
+              if (startTime.isNotEmpty || endTime.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Icon(Icons.schedule, color: Colors.teal, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Time: ${_formatTaskTime(startTime)} - ${_formatTaskTime(endTime)}',
+                      style: TextStyle(color: Colors.teal),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+              ],
+              if (todos.isNotEmpty) ...[
+                Text(
+                  'Todo Items:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                SizedBox(height: 4),
+                ...todos.take(3).map((todo) => Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 2),
+                  child: Text(
+                    '• ${todo.toString()}',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                )).toList(),
+                if (todos.length > 3)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 2),
+                    child: Text(
+                      '... and ${todos.length - 3} more items',
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Snooze',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Optionally navigate to task page
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('View Task'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Helper method to format task time
+  String _formatTaskTime(String time) {
+    try {
+      final parts = time.split(':');
+      if (parts.length >= 2) {
+        final hour = int.parse(parts[0]);
+        final minute = parts[1];
+        final ampm = hour >= 12 ? 'PM' : 'AM';
+        final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+        return '$displayHour:$minute $ampm';
+      }
+    } catch (e) {
+      print('Error formatting task time: $e');
+    }
+    return time;
+  }
+
   // Debug method to check service status
   void debugServiceStatus() {
     print('🐛 AlarmService Debug Status:');
