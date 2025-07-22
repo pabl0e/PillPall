@@ -57,6 +57,7 @@ class AlarmService {
     _medicationCheckTimer = Timer.periodic(Duration(seconds: 10), (timer) {
       if (_isInitialized && _context != null && _context!.mounted) {
         _checkForDueMedications(_context!);
+        _checkForDueTasks(_context!); // Add task checking
       } else {
         print('⚠️ Timer callback: Context invalid, stopping timer');
         timer.cancel();
@@ -68,6 +69,8 @@ class AlarmService {
       if (_isInitialized && _context != null && _context!.mounted) {
         print('🔍 Running initial medication check for user: $userId');
         _checkForDueMedications(_context!);
+        print('🔍 Running initial task check for user: $userId');
+        _checkForDueTasks(_context!);
       }
     });
 
@@ -243,6 +246,150 @@ class AlarmService {
       return dueMedications;
     } catch (e) {
       print('❌ Error in _getMedicationsDueNowWithTolerance: $e');
+      return [];
+    }
+  }
+
+  // Check for tasks that are due now (starting soon)
+  Future<void> _checkForDueTasks(BuildContext context) async {
+    try {
+      final currentUser = authService.value.currentUser;
+      if (currentUser == null) {
+        print('⚠️ User signed out during task check, stopping');
+        return;
+      }
+
+      final userId = currentUser.uid;
+      if (userId != _initializedForUserId) {
+        print('⚠️ User changed during task check, stopping');
+        return;
+      }
+
+      final now = DateTime.now();
+      final currentDate = now.toIso8601String().split('T')[0];
+      final currentTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+      // ✅ ENHANCED: More detailed logging with seconds
+      final currentTimeWithSeconds =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+      print(
+        '🔍 Checking tasks for user $userId at $currentTimeWithSeconds on $currentDate',
+      );
+
+      // Query tasks that are due now (with enhanced tolerance)
+      final dueTasks = await _getTasksDueNowWithTolerance(
+        currentDate,
+        currentTime,
+        userId,
+      );
+
+      if (dueTasks.isNotEmpty) {
+        print('⏰ Found ${dueTasks.length} tasks due now:');
+        for (var task in dueTasks) {
+          final taskKey =
+              '${task['id']}_${currentDate}_${task['startTime']}';
+
+          // ✅ ENHANCED: Prevent duplicate alarms for the same task/time
+          if (!_triggeredAlarms.contains(taskKey)) {
+            print(
+              '  🔔 NEW TASK ALARM: ${task['title']} at ${task['startTime']}',
+            );
+            _triggeredAlarms.add(taskKey);
+
+            if (_isInitialized && context.mounted) {
+              _showTaskAlarm(context, task['id'], task);
+            }
+          } else {
+            print(
+              '  ⏭️ SKIPPED: ${task['title']} at ${task['startTime']} (already triggered)',
+            );
+          }
+        }
+      } else {
+        // Only log every 6th check (every minute) to reduce spam
+        if (now.second < 10) {
+          print('📋 No tasks due at $currentTime');
+        }
+      }
+    } catch (e) {
+      print('❌ Error checking for due tasks: $e');
+    }
+  }
+
+  // Enhanced method to get tasks due now with better tolerance
+  Future<List<Map<String, dynamic>>> _getTasksDueNowWithTolerance(
+    String currentDate,
+    String currentTime,
+    String userId,
+  ) async {
+    try {
+      // Get current time parts
+      final timeParts = currentTime.split(':');
+      final currentHour = int.parse(timeParts[0]);
+      final currentMinute = int.parse(timeParts[1]);
+      final currentTotalMinutes = currentHour * 60 + currentMinute;
+
+      print(
+        '🔎 Querying tasks for user: $userId, date: $currentDate, time: $currentTime',
+      );
+
+      // Query all tasks for this specific user
+      final snapshot = await FirebaseFirestore.instance
+          .collection('tasks')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      print('📊 Found ${snapshot.docs.length} total tasks for user');
+
+      List<Map<String, dynamic>> dueTasks = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final taskStartDate = data['startDate'] ?? '';
+        final taskEndDate = data['endDate'] ?? '';
+        final taskStartTime = data['startTime'] ?? '';
+
+        // Check if task is scheduled for today
+        bool isScheduledToday = false;
+        
+        if (taskStartDate.contains(currentDate)) {
+          isScheduledToday = true;
+        } else if (taskStartDate.compareTo(currentDate) <= 0 && 
+                   taskEndDate.compareTo(currentDate) >= 0) {
+          isScheduledToday = true;
+        }
+
+        if (isScheduledToday && taskStartTime.isNotEmpty) {
+          final taskTimeParts = taskStartTime.split(':');
+          if (taskTimeParts.length >= 2) {
+            final taskHour = int.parse(taskTimeParts[0]);
+            final taskMinute = int.parse(taskTimeParts[1]);
+            final taskTotalMinutes = taskHour * 60 + taskMinute;
+
+            // ✅ ENHANCED: Check if task is due now (with 3-minute tolerance window)
+            final timeDifference = currentTotalMinutes - taskTotalMinutes;
+
+            print(
+              '⏱️ ${data['title']}: scheduled ${taskStartTime} (${taskTotalMinutes}min), current ${currentTime} (${currentTotalMinutes}min), diff: ${timeDifference}min',
+            );
+
+            // Task is due if:
+            // - It's exactly the right time (diff = 0)
+            // - It's up to 2 minutes late (diff = 1 or 2)
+            if (timeDifference >= 0 && timeDifference <= 2) {
+              print(
+                '✅ Task ${data['title']} is due! (${timeDifference}min ${timeDifference == 0 ? 'on time' : 'late'})',
+              );
+              dueTasks.add({'id': doc.id, ...data});
+            }
+          }
+        }
+      }
+
+      return dueTasks;
+    } catch (e) {
+      print('❌ Error in _getTasksDueNowWithTolerance: $e');
       return [];
     }
   }
@@ -557,5 +704,137 @@ class AlarmService {
         '  - Triggered alarms: ${_triggeredAlarms.take(5).join(', ')}${_triggeredAlarms.length > 5 ? '...' : ''}',
       );
     }
+  }
+
+  // Debug method to check today's medications
+  Future<void> debugTodaysMedications() async {
+    try {
+      final currentUser = authService.value.currentUser;
+      if (currentUser == null) {
+        print('❌ Cannot debug medications: No authenticated user');
+        return;
+      }
+
+      final userId = currentUser.uid;
+      final now = DateTime.now();
+      final currentDate = now.toIso8601String().split('T')[0];
+      final currentTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+      print('🩺 DEBUG: Medications for today ($currentDate) at $currentTime:');
+      
+      final snapshot = await FirebaseFirestore.instance
+          .collection('medications')
+          .where('userId', isEqualTo: userId)
+          .where('date', isEqualTo: currentDate)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        print('  📭 No medications found for today');
+      } else {
+        print('  📋 Found ${snapshot.docs.length} medications:');
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          final medTime = data['time'] ?? '';
+          final timeDiff = _calculateTimeDifference(currentTime, medTime);
+          print('    • ${data['name']} - ${medTime} - ${data['dosage']} (ID: ${doc.id}) - Diff: ${timeDiff}min');
+        }
+      }
+    } catch (e) {
+      print('❌ Error debugging medications: $e');
+    }
+  }
+
+  // Debug method to check today's tasks
+  Future<void> debugTodaysTasks() async {
+    try {
+      final currentUser = authService.value.currentUser;
+      if (currentUser == null) {
+        print('❌ Cannot debug tasks: No authenticated user');
+        return;
+      }
+
+      final userId = currentUser.uid;
+      final now = DateTime.now();
+      final currentDate = now.toIso8601String().split('T')[0];
+      final currentTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+      print('📋 DEBUG: Tasks for today ($currentDate) at $currentTime:');
+      
+      // Query tasks for today - checking both single date and date range tasks
+      final snapshot = await FirebaseFirestore.instance
+          .collection('tasks')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      List<Map<String, dynamic>> todaysTasks = [];
+      
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final startDate = data['startDate'] ?? '';
+        final endDate = data['endDate'] ?? '';
+        
+        // Check if task is scheduled for today
+        if (startDate.contains(currentDate) || 
+            (startDate.compareTo(currentDate) <= 0 && endDate.compareTo(currentDate) >= 0)) {
+          todaysTasks.add({'id': doc.id, ...data});
+        }
+      }
+
+      if (todaysTasks.isEmpty) {
+        print('  📭 No tasks found for today');
+      } else {
+        print('  📋 Found ${todaysTasks.length} tasks:');
+        for (var task in todaysTasks) {
+          final startTime = task['startTime'] ?? '';
+          final endTime = task['endTime'] ?? '';
+          final startTimeDiff = _calculateTimeDifference(currentTime, startTime);
+          final endTimeDiff = _calculateTimeDifference(currentTime, endTime);
+          final isActive = startTimeDiff <= 0 && endTimeDiff >= 0;
+          final isDue = startTimeDiff >= -2 && startTimeDiff <= 0;
+          
+          print('    • ${task['title']} - ${startTime}-${endTime} (ID: ${task['id']})');
+          print('      Start diff: ${startTimeDiff}min, End diff: ${endTimeDiff}min');
+          print('      Status: ${isDue ? 'DUE NOW' : isActive ? 'ACTIVE' : 'PENDING'}');
+          
+          final todos = task['todos'] as List? ?? [];
+          final todosChecked = task['todosChecked'] as List? ?? [];
+          final completedCount = todosChecked.where((checked) => checked == true).length;
+          print('      Progress: $completedCount/${todos.length} todos completed');
+        }
+      }
+    } catch (e) {
+      print('❌ Error debugging tasks: $e');
+    }
+  }
+
+  // Helper method to calculate time difference in minutes
+  int _calculateTimeDifference(String currentTime, String targetTime) {
+    try {
+      final currentParts = currentTime.split(':');
+      final targetParts = targetTime.split(':');
+      
+      if (currentParts.length >= 2 && targetParts.length >= 2) {
+        final currentMinutes = int.parse(currentParts[0]) * 60 + int.parse(currentParts[1]);
+        final targetMinutes = int.parse(targetParts[0]) * 60 + int.parse(targetParts[1]);
+        
+        return targetMinutes - currentMinutes;
+      }
+    } catch (e) {
+      print('Error calculating time difference: $e');
+    }
+    return 0;
+  }
+
+  // Comprehensive debug method for both medications and tasks
+  Future<void> debugAllScheduledItems() async {
+    print('🔍 ========== COMPREHENSIVE DEBUG REPORT ==========');
+    debugServiceStatus();
+    print('');
+    await debugTodaysMedications();
+    print('');
+    await debugTodaysTasks();
+    print('🔍 ================ END DEBUG REPORT ================');
   }
 }
