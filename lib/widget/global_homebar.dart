@@ -1,60 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pillpall/profile_page.dart';
+import 'package:pillpall/widget/alarm_test_page.dart'; // Add alarm test page import
 import 'package:pillpall/widget/doctor_list.dart';
 import 'package:pillpall/widget/landing_page.dart'; // Contains HomePage class
-import 'package:pillpall/widget/medication_widget.dart'; // Add medication widget import
-import 'package:pillpall/widget/symptom_widget.dart'; // Add symptom widget import
-import 'package:pillpall/widget/task_widget.dart';
-import 'package:pillpall/widget/alarm_test_page.dart'; // Add alarm test page import
+import 'package:pillpall/widget/medication_page.dart'; // Add medication widget import
+import 'package:pillpall/widget/symptom_page.dart'; // Add symptom widget import
+import 'package:pillpall/widget/task_page.dart';
 
 class GlobalHomeBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int)? onTap;
 
   const GlobalHomeBar({Key? key, this.selectedIndex = 0, this.onTap})
-      : super(key: key);
+    : super(key: key);
 
   void _navigateToPage(BuildContext context, int index) {
     // Use push instead of pushReplacement to keep AuthLayout alive
     // But first, pop to the root if we're deep in navigation
     Navigator.of(context).popUntil((route) => route.isFirst);
-    
+
     switch (index) {
       case 0:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => HomePage()));
         break;
       case 1:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => SymptomWidget()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => SymptomWidget()));
         break;
       case 2:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => DoctorListScreen()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => DoctorListScreen()));
         break;
       case 3:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => Task_Widget()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => Task_Widget()));
         break;
       case 4:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => Medication_Widget()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => Medication_Widget()));
         break;
       case 5:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => AlarmTestPage()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => AlarmTestPage()));
         break;
       case 6:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => ProfilePage()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => ProfilePage()));
         break;
     }
   }
