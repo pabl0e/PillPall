@@ -1,10 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/services/alarm_service.dart';
 import 'package:pillpall/services/medication_service.dart';
 import 'package:pillpall/utils/medication_alarm_helper.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/services/alarm_service.dart'; // Added import
-import 'package:pillpall/debug_helper.dart'; // Added import
+import 'package:pillpall/widget/global_homebar.dart';
 
 class Medication_Widget extends StatefulWidget {
   const Medication_Widget({super.key});
@@ -99,7 +98,9 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                             children: [
                               CircularProgressIndicator(),
                               SizedBox(height: 16),
-                              Text('Loading medications for ${_monthName(_selectedDate.month)} ${_selectedDate.day}...'),
+                              Text(
+                                'Loading medications for ${_monthName(_selectedDate.month)} ${_selectedDate.day}...',
+                              ),
                             ],
                           ),
                         );
@@ -111,11 +112,18 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.error_outline, size: 48, color: Colors.red),
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Colors.red,
+                              ),
                               SizedBox(height: 16),
                               Text(
                                 'Error loading medications',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               SizedBox(height: 8),
                               Text(
@@ -139,11 +147,18 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.medication_outlined, size: 48, color: Colors.grey),
+                              Icon(
+                                Icons.medication_outlined,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
                               SizedBox(height: 16),
                               Text(
                                 'No medications for this date',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               SizedBox(height: 8),
                               Text(
@@ -161,9 +176,13 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                         itemCount: medications.length,
                         itemBuilder: (context, i) {
                           final medication = medications[i];
-                          final medicationData = medication.data() as Map<String, dynamic>;
-                          
-                          return _buildMedicationCard(medication.id, medicationData);
+                          final medicationData =
+                              medication.data() as Map<String, dynamic>;
+
+                          return _buildMedicationCard(
+                            medication.id,
+                            medicationData,
+                          );
                         },
                       );
                     },
@@ -178,14 +197,16 @@ class _Medication_WidgetState extends State<Medication_Widget> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           SizedBox(height: 16),
-          
+
           // Original add medication button with unique hero tag
           Padding(
             padding: const EdgeInsets.only(bottom: 32.0),
             child: FloatingActionButton(
               heroTag: "add_medication_fab", // Unique hero tag
-              onPressed: _isLoading ? null : () => _showAddMedicationDialog(_selectedDate),
-              child: _isLoading 
+              onPressed: _isLoading
+                  ? null
+                  : () => _showAddMedicationDialog(_selectedDate),
+              child: _isLoading
                   ? SizedBox(
                       width: 20,
                       height: 20,
@@ -196,7 +217,8 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                     )
                   : Icon(Icons.add, color: Colors.white),
               backgroundColor: _isLoading ? Colors.grey : Colors.deepPurple,
-              tooltip: 'Add Medication for ${_monthName(_selectedDate.month)} ${_selectedDate.day}',
+              tooltip:
+                  'Add Medication for ${_monthName(_selectedDate.month)} ${_selectedDate.day}',
             ),
           ),
         ],
@@ -212,7 +234,10 @@ class _Medication_WidgetState extends State<Medication_Widget> {
   }
 
   // Enhanced medication card with TEST ALARM button
-  Widget _buildMedicationCard(String medicationId, Map<String, dynamic> medicationData) {
+  Widget _buildMedicationCard(
+    String medicationId,
+    Map<String, dynamic> medicationData,
+  ) {
     final medicationName = medicationData['name'] ?? 'Unknown Medication';
     final dosage = medicationData['dosage'] ?? '';
     final time = medicationData['time'] ?? '';
@@ -221,9 +246,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       // Highlight card if medication is due now
       color: isDueNow ? Colors.red[50] : null,
       child: Padding(
@@ -246,7 +269,9 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDueNow ? Colors.red[900] : Colors.deepPurple[900],
+                      color: isDueNow
+                          ? Colors.red[900]
+                          : Colors.deepPurple[900],
                     ),
                   ),
                 ),
@@ -269,7 +294,8 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                   ),
                 SizedBox(width: 8),
                 PopupMenuButton<String>(
-                  onSelected: (value) => _handleMenuAction(value, medicationId, medicationData),
+                  onSelected: (value) =>
+                      _handleMenuAction(value, medicationId, medicationData),
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       value: 'test_alarm',
@@ -306,7 +332,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
               ],
             ),
             SizedBox(height: 12),
-            
+
             // Medication Details
             if (dosage.isNotEmpty)
               Padding(
@@ -325,7 +351,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                   ],
                 ),
               ),
-            
+
             // Time Info
             if (time.isNotEmpty)
               Row(
@@ -341,9 +367,9 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                   ),
                 ],
               ),
-            
+
             SizedBox(height: 16),
-            
+
             // Action Buttons Row
             Row(
               children: [
@@ -363,17 +389,21 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                     ),
                   ),
                 ),
-                
+
                 SizedBox(width: 8),
-                
+
                 // Quick Actions
                 if (isDueNow) ...[
                   ElevatedButton(
-                    onPressed: () => _triggerAlarmNow(medicationId, medicationData),
+                    onPressed: () =>
+                        _triggerAlarmNow(medicationId, medicationData),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -399,7 +429,10 @@ class _Medication_WidgetState extends State<Medication_Widget> {
   }
 
   // Trigger alarm for due medication
-  void _triggerAlarmNow(String medicationId, Map<String, dynamic> medicationData) {
+  void _triggerAlarmNow(
+    String medicationId,
+    Map<String, dynamic> medicationData,
+  ) {
     AlarmService().triggerMedicationAlarm(
       context,
       medicationId: medicationId,
@@ -407,7 +440,11 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     );
   }
 
-  Future<void> _handleMenuAction(String action, String medicationId, Map<String, dynamic> medicationData) async {
+  Future<void> _handleMenuAction(
+    String action,
+    String medicationId,
+    Map<String, dynamic> medicationData,
+  ) async {
     switch (action) {
       case 'test_alarm':
         _testAlarm(medicationId, medicationData);
@@ -433,7 +470,9 @@ class _Medication_WidgetState extends State<Medication_Widget> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('Add Medication for ${_monthName(selectedDate.month)} ${selectedDate.day}'),
+              title: Text(
+                'Add Medication for ${_monthName(selectedDate.month)} ${selectedDate.day}',
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -454,12 +493,14 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    
+
                     // Date Picker
                     Row(
                       children: [
                         Expanded(
-                          child: Text("Date: ${selectedDate.toLocal().toString().split(' ')[0]}"),
+                          child: Text(
+                            "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+                          ),
                         ),
                         TextButton(
                           child: Text('Change'),
@@ -479,7 +520,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     // Time Picker
                     Row(
                       children: [
@@ -529,9 +570,10 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                         name: nameController.text.trim(),
                         dosage: dosageController.text.trim(),
                         date: selectedDate,
-                        time: '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                        time:
+                            '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
                       );
-                      
+
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -543,7 +585,9 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                       print('Error adding medication: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Failed to add medication. Please try again.'),
+                          content: Text(
+                            'Failed to add medication. Please try again.',
+                          ),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -562,7 +606,10 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     );
   }
 
-  Future<void> _showEditMedicationDialog(String medicationId, Map<String, dynamic> medicationData) async {
+  Future<void> _showEditMedicationDialog(
+    String medicationId,
+    Map<String, dynamic> medicationData,
+  ) async {
     // Implementation for edit dialog (similar to add dialog but with existing data)
     // ... (implement as needed)
   }
@@ -586,7 +633,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
         ],
       ),
     );
-    
+
     if (confirm == true) {
       try {
         await _medicationService.deleteMedication(medicationId);
@@ -610,8 +657,18 @@ class _Medication_WidgetState extends State<Medication_Widget> {
 
   String _monthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
