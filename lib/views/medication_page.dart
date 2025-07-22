@@ -566,13 +566,19 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                     });
 
                     try {
+                      // Format time consistently 
+                      String formatTimeForDatabase(TimeOfDay time) {
+                        final hour = time.hour.toString().padLeft(2, '0');
+                        final minute = time.minute.toString().padLeft(2, '0');
+                        return '$hour:$minute';
+                      }
+
                       await _medicationService.addMedication(
                         MedicationModel(
                           name: nameController.text.trim(),
                           dosage: dosageController.text.trim(),
                           date: selectedDate.toIso8601String().split('T')[0],
-                          time:
-                              '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                          time: formatTimeForDatabase(selectedTime),
                           userId: _currentUserId ?? '',
                         ),
                       );
@@ -613,8 +619,187 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     String medicationId,
     Map<String, dynamic> medicationData,
   ) async {
-    // Implementation for edit dialog (similar to add dialog but with existing data)
-    // ... (implement as needed)
+    TextEditingController nameController = TextEditingController(
+      text: medicationData['name'] ?? '',
+    );
+    TextEditingController dosageController = TextEditingController(
+      text: medicationData['dosage'] ?? '',
+    );
+
+    // Parse the existing date
+    DateTime selectedDate;
+    try {
+      selectedDate = DateTime.parse(medicationData['date'] ?? DateTime.now().toIso8601String());
+    } catch (e) {
+      selectedDate = DateTime.now();
+    }
+
+    // Parse the existing time
+    TimeOfDay selectedTime;
+    try {
+      String timeStr = medicationData['time']?.toString() ?? '00:00';
+      // Remove any AM/PM and convert to 24-hour format if needed
+      timeStr = timeStr.replaceAll(RegExp(r'\s*(AM|PM)\s*', caseSensitive: false), '');
+      
+      final timeParts = timeStr.split(':');
+      selectedTime = TimeOfDay(
+        hour: int.parse(timeParts[0]),
+        minute: int.parse(timeParts[1]),
+      );
+    } catch (e) {
+      print('Error parsing medication time: $e');
+      selectedTime = TimeOfDay.now();
+    }
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('Edit Medication'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Medication Name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: dosageController,
+                      decoration: InputDecoration(
+                        labelText: 'Dosage (e.g., 5mg, 1 tablet)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+
+                    // Date Picker
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+                          ),
+                        ),
+                        TextButton(
+                          child: Text('Change'),
+                          onPressed: () async {
+                            DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: DateTime(DateTime.now().year - 1),
+                              lastDate: DateTime(DateTime.now().year + 2),
+                            );
+                            if (picked != null) {
+                              setDialogState(() {
+                                selectedDate = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+
+                    // Time Picker
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text("Time: ${selectedTime.format(context)}"),
+                        ),
+                        TextButton(
+                          child: Text('Pick'),
+                          onPressed: () async {
+                            TimeOfDay? picked = await showTimePicker(
+                              context: context,
+                              initialTime: selectedTime,
+                            );
+                            if (picked != null) {
+                              setDialogState(() {
+                                selectedTime = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                ElevatedButton(
+                  child: Text('Save Changes'),
+                  onPressed: () async {
+                    if (nameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please enter medication name')),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      _isLoading = true;
+                    });
+
+                    try {
+                      // Format time consistently 
+                      String formatTimeForDatabase(TimeOfDay time) {
+                        final hour = time.hour.toString().padLeft(2, '0');
+                        final minute = time.minute.toString().padLeft(2, '0');
+                        return '$hour:$minute';
+                      }
+
+                      // Create updated medication model
+                      MedicationModel updatedMedication = MedicationModel(
+                        id: medicationId,
+                        name: nameController.text.trim(),
+                        dosage: dosageController.text.trim(),
+                        date: selectedDate.toIso8601String().split('T')[0],
+                        time: formatTimeForDatabase(selectedTime),
+                        userId: _currentUserId ?? '',
+                      );
+
+                      await _medicationService.updateMedication(updatedMedication);
+
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Medication updated successfully!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      print('Error updating medication: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Failed to update medication. Please try again.',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    } finally {
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _showDeleteConfirmation(String medicationId) async {

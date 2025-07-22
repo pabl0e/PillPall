@@ -560,8 +560,11 @@ class _Task_WidgetState extends State<Task_Widget> {
     String taskId,
     Map<String, dynamic> taskData,
   ) async {
+    print('🔧 Menu action: $action for task $taskId');
+    
     switch (action) {
       case 'edit':
+        print('🔧 Opening edit dialog for task: ${taskData['title']}');
         await _showEditTaskDialog(taskId, taskData);
         break;
       case 'delete':
@@ -866,12 +869,19 @@ class _Task_WidgetState extends State<Task_Widget> {
                           .where((text) => text.isNotEmpty)
                           .toList();
 
+                      // Format time consistently 
+                      String formatTimeForDatabase(TimeOfDay time) {
+                        final hour = time.hour.toString().padLeft(2, '0');
+                        final minute = time.minute.toString().padLeft(2, '0');
+                        return '$hour:$minute';
+                      }
+
                       await _taskService.addTask(
                         title: titleController.text.trim(),
                         startDate: startDate,
                         endDate: endDate,
-                        startTime: startTime.format(context),
-                        endTime: endTime.format(context),
+                        startTime: formatTimeForDatabase(startTime),
+                        endTime: formatTimeForDatabase(endTime),
                         todos: todos,
                         todosChecked: List.filled(todos.length, false),
                       );
@@ -928,18 +938,28 @@ class _Task_WidgetState extends State<Task_Widget> {
     TimeOfDay endTime;
 
     try {
-      final startTimeParts = (taskData['startTime'] ?? '00:00').split(':');
+      // Handle time parsing more robustly
+      String startTimeStr = taskData['startTime']?.toString() ?? '00:00';
+      String endTimeStr = taskData['endTime']?.toString() ?? '01:00';
+      
+      // Remove any AM/PM and convert to 24-hour format if needed
+      startTimeStr = startTimeStr.replaceAll(RegExp(r'\s*(AM|PM)\s*', caseSensitive: false), '');
+      endTimeStr = endTimeStr.replaceAll(RegExp(r'\s*(AM|PM)\s*', caseSensitive: false), '');
+      
+      final startTimeParts = startTimeStr.split(':');
+      final endTimeParts = endTimeStr.split(':');
+      
       startTime = TimeOfDay(
         hour: int.parse(startTimeParts[0]),
         minute: int.parse(startTimeParts[1]),
       );
 
-      final endTimeParts = (taskData['endTime'] ?? '00:00').split(':');
       endTime = TimeOfDay(
         hour: int.parse(endTimeParts[0]),
         minute: int.parse(endTimeParts[1]),
       );
-    } catch (_) {
+    } catch (e) {
+      print('Error parsing times: $e');
       startTime = TimeOfDay.now();
       endTime = TimeOfDay(
         hour: TimeOfDay.now().hour + 1,
@@ -1170,17 +1190,22 @@ class _Task_WidgetState extends State<Task_Widget> {
                             : false;
                       });
 
+                      // Format time consistently with what _formatTimeAMPM expects
+                      String formatTimeForDatabase(TimeOfDay time) {
+                        final hour = time.hour.toString().padLeft(2, '0');
+                        final minute = time.minute.toString().padLeft(2, '0');
+                        return '$hour:$minute';
+                      }
+
                       await FirebaseFirestore.instance
                           .collection('tasks')
                           .doc(taskId)
                           .update({
                         'title': titleController.text.trim(),
-                        'startDate': startDate.toIso8601String(),
-                        'endDate': endDate.toIso8601String(),
-                        'startDateOnly': startDate.toIso8601String().split('T')[0],
-                        'endDateOnly': endDate.toIso8601String().split('T')[0],
-                        'startTime': startTime.format(context),
-                        'endTime': endTime.format(context),
+                        'startDate': startDate.toIso8601String().split('T')[0],
+                        'endDate': endDate.toIso8601String().split('T')[0],
+                        'startTime': formatTimeForDatabase(startTime),
+                        'endTime': formatTimeForDatabase(endTime),
                         'todos': todos,
                         'todosChecked': todosChecked,
                         'updatedAt': FieldValue.serverTimestamp(),
