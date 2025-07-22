@@ -635,6 +635,7 @@ class _SymptomCard extends StatelessWidget {
                   // ✅ ENHANCED: Symptom name with severity indicator
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // Severity dot indicator
                       Container(
@@ -645,8 +646,8 @@ class _SymptomCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      SizedBox(width: 6),
-                      Expanded(
+                      SizedBox(width: 4),
+                      Flexible(
                         child: Text(
                           label,
                           style: TextStyle(
