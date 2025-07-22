@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:pillpall/widget/global_homebar.dart';
-import 'package:pillpall/services/task_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:pillpall/services/task_service.dart';
+import 'package:pillpall/views/global_homebar.dart';
 
 class Task_Widget extends StatefulWidget {
   const Task_Widget({super.key});
@@ -96,7 +96,9 @@ class _Task_WidgetState extends State<Task_Widget> {
                             children: [
                               CircularProgressIndicator(),
                               SizedBox(height: 16),
-                              Text('Loading tasks for ${_monthName(_selectedDate.month)} ${_selectedDate.day}...'),
+                              Text(
+                                'Loading tasks for ${_monthName(_selectedDate.month)} ${_selectedDate.day}...',
+                              ),
                             ],
                           ),
                         );
@@ -108,11 +110,18 @@ class _Task_WidgetState extends State<Task_Widget> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.error_outline, size: 48, color: Colors.red),
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Colors.red,
+                              ),
                               SizedBox(height: 16),
                               Text(
                                 'Error loading tasks',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               SizedBox(height: 8),
                               Text(
@@ -136,11 +145,18 @@ class _Task_WidgetState extends State<Task_Widget> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.task_outlined, size: 48, color: Colors.grey),
+                              Icon(
+                                Icons.task_outlined,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
                               SizedBox(height: 16),
                               Text(
                                 'No tasks for this date',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               SizedBox(height: 8),
                               Text(
@@ -172,8 +188,10 @@ class _Task_WidgetState extends State<Task_Widget> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 32.0),
         child: FloatingActionButton(
-          onPressed: _isLoading ? null : () => _showAddTaskDialog(_selectedDate),
-          child: _isLoading 
+          onPressed: _isLoading
+              ? null
+              : () => _showAddTaskDialog(_selectedDate),
+          child: _isLoading
               ? SizedBox(
                   width: 20,
                   height: 20,
@@ -184,7 +202,8 @@ class _Task_WidgetState extends State<Task_Widget> {
                 )
               : Icon(Icons.add, color: Colors.white),
           backgroundColor: _isLoading ? Colors.grey : Colors.deepPurple,
-          tooltip: 'Add Task for ${_monthName(_selectedDate.month)} ${_selectedDate.day}',
+          tooltip:
+              'Add Task for ${_monthName(_selectedDate.month)} ${_selectedDate.day}',
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -201,15 +220,15 @@ class _Task_WidgetState extends State<Task_Widget> {
   Widget _buildTaskCard(DocumentSnapshot task) {
     final taskId = task.id;
     final taskData = task.data() as Map<String, dynamic>;
-    final completionPercentage = _taskService.getTaskCompletionPercentage(taskData);
+    final completionPercentage = _taskService.getTaskCompletionPercentage(
+      taskData,
+    );
     final isFullyCompleted = completionPercentage == 1.0;
 
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -231,14 +250,15 @@ class _Task_WidgetState extends State<Task_Widget> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.deepPurple[900],
-                      decoration: isFullyCompleted 
-                          ? TextDecoration.lineThrough 
+                      decoration: isFullyCompleted
+                          ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
                   ),
                 ),
                 // Completion percentage
-                if (taskData['todos'] != null && (taskData['todos'] as List).isNotEmpty)
+                if (taskData['todos'] != null &&
+                    (taskData['todos'] as List).isNotEmpty)
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -256,18 +276,27 @@ class _Task_WidgetState extends State<Task_Widget> {
                   ),
                 SizedBox(width: 8),
                 PopupMenuButton<String>(
-                  onSelected: (value) => _handleMenuAction(value, taskId, taskData),
+                  onSelected: (value) =>
+                      _handleMenuAction(value, taskId, taskData),
                   itemBuilder: (context) => [
                     PopupMenuItem(
-                      value: isFullyCompleted ? 'mark_incomplete' : 'mark_complete',
+                      value: isFullyCompleted
+                          ? 'mark_incomplete'
+                          : 'mark_complete',
                       child: Row(
                         children: [
                           Icon(
                             isFullyCompleted ? Icons.undo : Icons.check_circle,
-                            color: isFullyCompleted ? Colors.orange : Colors.green,
+                            color: isFullyCompleted
+                                ? Colors.orange
+                                : Colors.green,
                           ),
                           SizedBox(width: 8),
-                          Text(isFullyCompleted ? 'Mark Incomplete' : 'Mark Complete'),
+                          Text(
+                            isFullyCompleted
+                                ? 'Mark Incomplete'
+                                : 'Mark Complete',
+                          ),
                         ],
                       ),
                     ),
@@ -296,9 +325,10 @@ class _Task_WidgetState extends State<Task_Widget> {
               ],
             ),
             SizedBox(height: 12),
-            
+
             // Progress bar (if task has todos)
-            if (taskData['todos'] != null && (taskData['todos'] as List).isNotEmpty)
+            if (taskData['todos'] != null &&
+                (taskData['todos'] as List).isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: LinearProgressIndicator(
@@ -309,7 +339,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                   ),
                 ),
               ),
-            
+
             // Task Time Info
             Row(
               children: [
@@ -325,7 +355,7 @@ class _Task_WidgetState extends State<Task_Widget> {
               ],
             ),
             SizedBox(height: 8),
-            
+
             // Task Date Range (if different from selected date)
             if (_shouldShowDateRange(taskData))
               Padding(
@@ -344,9 +374,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                   ],
                 ),
               ),
-            
+
             // Todo List
-            if (taskData['todos'] != null && (taskData['todos'] as List).isNotEmpty)
+            if (taskData['todos'] != null &&
+                (taskData['todos'] as List).isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -358,44 +389,48 @@ class _Task_WidgetState extends State<Task_Widget> {
                     ),
                   ),
                   SizedBox(height: 4),
-                  ...List.generate(
-                    (taskData['todos'] as List).length,
-                    (todoIndex) {
-                      final todos = taskData['todos'] as List;
-                      final todosChecked = taskData['todosChecked'] as List? ?? [];
-                      final isChecked = todoIndex < todosChecked.length 
-                          ? todosChecked[todoIndex] 
-                          : false;
-                      
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2.0),
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: isChecked,
-                              onChanged: (value) {
-                                _toggleTodoItem(taskId, todoIndex, value ?? false);
-                              },
-                              activeColor: Colors.deepPurple,
-                            ),
-                            Expanded(
-                              child: Text(
-                                todos[todoIndex].toString(),
-                                style: TextStyle(
-                                  decoration: isChecked 
-                                      ? TextDecoration.lineThrough 
-                                      : TextDecoration.none,
-                                  color: isChecked 
-                                      ? Colors.grey[600] 
-                                      : Colors.black87,
-                                ),
+                  ...List.generate((taskData['todos'] as List).length, (
+                    todoIndex,
+                  ) {
+                    final todos = taskData['todos'] as List;
+                    final todosChecked =
+                        taskData['todosChecked'] as List? ?? [];
+                    final isChecked = todoIndex < todosChecked.length
+                        ? todosChecked[todoIndex]
+                        : false;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: isChecked,
+                            onChanged: (value) {
+                              _toggleTodoItem(
+                                taskId,
+                                todoIndex,
+                                value ?? false,
+                              );
+                            },
+                            activeColor: Colors.deepPurple,
+                          ),
+                          Expanded(
+                            child: Text(
+                              todos[todoIndex].toString(),
+                              style: TextStyle(
+                                decoration: isChecked
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                                color: isChecked
+                                    ? Colors.grey[600]
+                                    : Colors.black87,
                               ),
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
           ],
@@ -408,21 +443,25 @@ class _Task_WidgetState extends State<Task_Widget> {
     final startDate = taskData['startDate'];
     final endDate = taskData['endDate'];
     if (startDate == null || endDate == null) return false;
-    
+
     final startDateTime = DateTime.tryParse(startDate);
     final endDateTime = DateTime.tryParse(endDate);
     if (startDateTime == null || endDateTime == null) return false;
-    
+
     // Show date range if task spans multiple days or is not on selected date
-    return startDateTime.day != endDateTime.day || 
-           startDateTime.month != endDateTime.month ||
-           startDateTime.year != endDateTime.year ||
-           startDateTime.day != _selectedDate.day ||
-           startDateTime.month != _selectedDate.month ||
-           startDateTime.year != _selectedDate.year;
+    return startDateTime.day != endDateTime.day ||
+        startDateTime.month != endDateTime.month ||
+        startDateTime.year != endDateTime.year ||
+        startDateTime.day != _selectedDate.day ||
+        startDateTime.month != _selectedDate.month ||
+        startDateTime.year != _selectedDate.year;
   }
 
-  Future<void> _toggleTodoItem(String taskId, int todoIndex, bool isChecked) async {
+  Future<void> _toggleTodoItem(
+    String taskId,
+    int todoIndex,
+    bool isChecked,
+  ) async {
     try {
       await _taskService.toggleTodoItem(taskId, todoIndex, isChecked);
     } catch (e) {
@@ -436,7 +475,11 @@ class _Task_WidgetState extends State<Task_Widget> {
     }
   }
 
-  Future<void> _handleMenuAction(String action, String taskId, Map<String, dynamic> taskData) async {
+  Future<void> _handleMenuAction(
+    String action,
+    String taskId,
+    Map<String, dynamic> taskData,
+  ) async {
     switch (action) {
       case 'edit':
         await _showEditTaskDialog(taskId, taskData);
@@ -488,7 +531,10 @@ class _Task_WidgetState extends State<Task_Widget> {
     DateTime startDate = preselectedDate;
     DateTime endDate = preselectedDate;
     TimeOfDay startTime = TimeOfDay.now();
-    TimeOfDay endTime = TimeOfDay(hour: TimeOfDay.now().hour + 1, minute: TimeOfDay.now().minute);
+    TimeOfDay endTime = TimeOfDay(
+      hour: TimeOfDay.now().hour + 1,
+      minute: TimeOfDay.now().minute,
+    );
     List<TextEditingController> todoControllers = [TextEditingController()];
 
     await showDialog(
@@ -497,7 +543,9 @@ class _Task_WidgetState extends State<Task_Widget> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('Add Task for ${_monthName(startDate.month)} ${startDate.day}'),
+              title: Text(
+                'Add Task for ${_monthName(startDate.month)} ${startDate.day}',
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -510,12 +558,14 @@ class _Task_WidgetState extends State<Task_Widget> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    
+
                     // Start Date
                     Row(
                       children: [
                         Expanded(
-                          child: Text("Start Date: ${startDate.toLocal().toString().split(' ')[0]}"),
+                          child: Text(
+                            "Start Date: ${startDate.toLocal().toString().split(' ')[0]}",
+                          ),
                         ),
                         TextButton(
                           child: Text('Change'),
@@ -538,12 +588,14 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     // End Date
                     Row(
                       children: [
                         Expanded(
-                          child: Text("End Date: ${endDate.toLocal().toString().split(' ')[0]}"),
+                          child: Text(
+                            "End Date: ${endDate.toLocal().toString().split(' ')[0]}",
+                          ),
                         ),
                         TextButton(
                           child: Text('Change'),
@@ -563,12 +615,14 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     // Start Time
                     Row(
                       children: [
                         Expanded(
-                          child: Text("Start Time: ${startTime.format(context)}"),
+                          child: Text(
+                            "Start Time: ${startTime.format(context)}",
+                          ),
                         ),
                         TextButton(
                           child: Text('Pick'),
@@ -586,7 +640,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     // End Time
                     Row(
                       children: [
@@ -609,16 +663,16 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     SizedBox(height: 16),
-                    
+
                     // Todo Items
                     Text(
                       'Todo Items:',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
-                    
+
                     ...List.generate(todoControllers.length, (index) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
@@ -635,7 +689,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                             ),
                             if (todoControllers.length > 1)
                               IconButton(
-                                icon: Icon(Icons.remove_circle, color: Colors.red),
+                                icon: Icon(
+                                  Icons.remove_circle,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () {
                                   setDialogState(() {
                                     todoControllers.removeAt(index);
@@ -646,7 +703,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       );
                     }),
-                    
+
                     TextButton.icon(
                       onPressed: () {
                         setDialogState(() {
@@ -698,11 +755,11 @@ class _Task_WidgetState extends State<Task_Widget> {
                         todos: todos,
                         todosChecked: List.filled(todos.length, false),
                       );
-                      
+
                       for (var controller in todoControllers) {
                         controller.dispose();
                       }
-                      
+
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -714,7 +771,9 @@ class _Task_WidgetState extends State<Task_Widget> {
                       print('Error adding task: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Failed to add task. Please try again.'),
+                          content: Text(
+                            'Failed to add task. Please try again.',
+                          ),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -733,21 +792,28 @@ class _Task_WidgetState extends State<Task_Widget> {
     );
   }
 
-  Future<void> _showEditTaskDialog(String taskId, Map<String, dynamic> taskData) async {
-    TextEditingController titleController = TextEditingController(text: taskData['title']);
-    DateTime startDate = DateTime.tryParse(taskData['startDate'] ?? '') ?? DateTime.now();
-    DateTime endDate = DateTime.tryParse(taskData['endDate'] ?? '') ?? DateTime.now();
-    
+  Future<void> _showEditTaskDialog(
+    String taskId,
+    Map<String, dynamic> taskData,
+  ) async {
+    TextEditingController titleController = TextEditingController(
+      text: taskData['title'],
+    );
+    DateTime startDate =
+        DateTime.tryParse(taskData['startDate'] ?? '') ?? DateTime.now();
+    DateTime endDate =
+        DateTime.tryParse(taskData['endDate'] ?? '') ?? DateTime.now();
+
     TimeOfDay startTime;
     TimeOfDay endTime;
-    
+
     try {
       final startTimeParts = (taskData['startTime'] ?? '00:00').split(':');
       startTime = TimeOfDay(
         hour: int.parse(startTimeParts[0]),
         minute: int.parse(startTimeParts[1]),
       );
-      
+
       final endTimeParts = (taskData['endTime'] ?? '00:00').split(':');
       endTime = TimeOfDay(
         hour: int.parse(endTimeParts[0]),
@@ -755,14 +821,17 @@ class _Task_WidgetState extends State<Task_Widget> {
       );
     } catch (_) {
       startTime = TimeOfDay.now();
-      endTime = TimeOfDay(hour: TimeOfDay.now().hour + 1, minute: TimeOfDay.now().minute);
+      endTime = TimeOfDay(
+        hour: TimeOfDay.now().hour + 1,
+        minute: TimeOfDay.now().minute,
+      );
     }
-    
+
     List<String> existingTodos = List<String>.from(taskData['todos'] ?? []);
     List<TextEditingController> todoControllers = existingTodos
         .map((todo) => TextEditingController(text: todo))
         .toList();
-    
+
     if (todoControllers.isEmpty) {
       todoControllers.add(TextEditingController());
     }
@@ -786,12 +855,14 @@ class _Task_WidgetState extends State<Task_Widget> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    
+
                     // Start Date
                     Row(
                       children: [
                         Expanded(
-                          child: Text("Start Date: ${startDate.toLocal().toString().split(' ')[0]}"),
+                          child: Text(
+                            "Start Date: ${startDate.toLocal().toString().split(' ')[0]}",
+                          ),
                         ),
                         TextButton(
                           child: Text('Change'),
@@ -814,12 +885,14 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     // End Date
                     Row(
                       children: [
                         Expanded(
-                          child: Text("End Date: ${endDate.toLocal().toString().split(' ')[0]}"),
+                          child: Text(
+                            "End Date: ${endDate.toLocal().toString().split(' ')[0]}",
+                          ),
                         ),
                         TextButton(
                           child: Text('Change'),
@@ -839,12 +912,14 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     // Start Time
                     Row(
                       children: [
                         Expanded(
-                          child: Text("Start Time: ${startTime.format(context)}"),
+                          child: Text(
+                            "Start Time: ${startTime.format(context)}",
+                          ),
                         ),
                         TextButton(
                           child: Text('Pick'),
@@ -862,7 +937,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     // End Time
                     Row(
                       children: [
@@ -885,16 +960,16 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       ],
                     ),
-                    
+
                     SizedBox(height: 16),
-                    
+
                     // Todo Items
                     Text(
                       'Todo Items:',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
-                    
+
                     ...List.generate(todoControllers.length, (index) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
@@ -911,7 +986,10 @@ class _Task_WidgetState extends State<Task_Widget> {
                             ),
                             if (todoControllers.length > 1)
                               IconButton(
-                                icon: Icon(Icons.remove_circle, color: Colors.red),
+                                icon: Icon(
+                                  Icons.remove_circle,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () {
                                   setDialogState(() {
                                     todoControllers[index].dispose();
@@ -923,7 +1001,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                         ),
                       );
                     }),
-                    
+
                     TextButton.icon(
                       onPressed: () {
                         setDialogState(() {
@@ -962,9 +1040,15 @@ class _Task_WidgetState extends State<Task_Widget> {
                           .where((text) => text.isNotEmpty)
                           .toList();
 
-                      List<bool> existingChecked = List<bool>.from(taskData['todosChecked'] ?? []);
-                      List<bool> todosChecked = List.generate(todos.length, (index) {
-                        return index < existingChecked.length ? existingChecked[index] : false;
+                      List<bool> existingChecked = List<bool>.from(
+                        taskData['todosChecked'] ?? [],
+                      );
+                      List<bool> todosChecked = List.generate(todos.length, (
+                        index,
+                      ) {
+                        return index < existingChecked.length
+                            ? existingChecked[index]
+                            : false;
                       });
 
                       await _taskService.updateTask(
@@ -977,11 +1061,11 @@ class _Task_WidgetState extends State<Task_Widget> {
                         todos: todos,
                         todosChecked: todosChecked,
                       );
-                      
+
                       for (var controller in todoControllers) {
                         controller.dispose();
                       }
-                      
+
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -993,7 +1077,9 @@ class _Task_WidgetState extends State<Task_Widget> {
                       print('Error updating task: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Failed to update task. Please try again.'),
+                          content: Text(
+                            'Failed to update task. Please try again.',
+                          ),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -1027,7 +1113,7 @@ class _Task_WidgetState extends State<Task_Widget> {
         ],
       ),
     );
-    
+
     if (confirm == true) {
       try {
         await _taskService.deleteTask(taskId);
@@ -1051,8 +1137,18 @@ class _Task_WidgetState extends State<Task_Widget> {
 
   String _monthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
@@ -1062,8 +1158,19 @@ class _Task_WidgetState extends State<Task_Widget> {
     final date = DateTime.tryParse(isoDate);
     if (date == null) return '';
     const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return "${months[date.month]} ${date.day}, ${date.year}";
   }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:pillpall/profile_page.dart';
-import 'package:pillpall/widget/alarm_test_page.dart'; // Add alarm test page import
-import 'package:pillpall/widget/doctor_list.dart';
-import 'package:pillpall/widget/landing_page.dart'; // Contains HomePage class
-import 'package:pillpall/widget/medication_page.dart'; // Add medication widget import
-import 'package:pillpall/widget/symptom_page.dart'; // Add symptom widget import
-import 'package:pillpall/widget/task_page.dart';
+import 'package:pillpall/views/alarm_test_page.dart'; // Add alarm test page import
+import 'package:pillpall/views/doctor_list.dart';
+import 'package:pillpall/views/landing_page.dart'; // Contains HomePage class
+import 'package:pillpall/views/medication_page.dart'; // Add medication widget import
+import 'package:pillpall/views/profile_page.dart';
+import 'package:pillpall/views/symptom_page.dart'; // Add symptom widget import
+import 'package:pillpall/views/task_page.dart';
 
 class GlobalHomeBar extends StatelessWidget {
   final int selectedIndex;

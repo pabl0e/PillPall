@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pillpall/services/alarm_service.dart';
 import 'package:pillpall/services/medication_service.dart';
 import 'package:pillpall/utils/medication_alarm_helper.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/views/global_homebar.dart';
 
 class Medication_Widget extends StatefulWidget {
   const Medication_Widget({super.key});

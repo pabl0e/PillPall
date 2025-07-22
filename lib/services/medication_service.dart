@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/auth_service.dart';
+import 'package:pillpall/services/auth_service.dart';
 
 class MedicationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -14,7 +14,9 @@ class MedicationService {
         throw Exception('User must be signed in to view medications');
       }
 
-      print('🔍 Getting medications for date: $dateString, user: $_currentUserId');
+      print(
+        '🔍 Getting medications for date: $dateString, user: $_currentUserId',
+      );
 
       return _db
           .collection('medications')
@@ -42,7 +44,7 @@ class MedicationService {
       }
 
       final dateString = date.toIso8601String().split('T')[0];
-      
+
       print('💊 Adding medication:');
       print('  - Name: $name');
       print('  - Dosage: $dosage');
@@ -129,7 +131,8 @@ class MedicationService {
 
       final now = DateTime.now();
       final currentDate = now.toIso8601String().split('T')[0];
-      final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+      final currentTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
       print('🔍 Checking for medications due at $currentTime on $currentDate');
 
@@ -142,10 +145,9 @@ class MedicationService {
 
       print('📊 Query returned ${snapshot.docs.length} medications');
 
-      return snapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data() as Map<String, dynamic>,
-      }).toList();
+      return snapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
+          .toList();
     } catch (e) {
       print('Error getting medications due now: $e');
       return [];
@@ -172,7 +174,9 @@ class MedicationService {
       } else {
         for (var doc in snapshot.docs) {
           final data = doc.data();
-          print('  📋 ${data['name']} - ${data['time']} - ${data['dosage']} (ID: ${doc.id})');
+          print(
+            '  📋 ${data['name']} - ${data['time']} - ${data['dosage']} (ID: ${doc.id})',
+          );
         }
       }
     } catch (e) {

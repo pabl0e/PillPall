@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:pillpall/auth_service.dart'; // Import your auth service
+import 'package:pillpall/services/auth_service.dart'; // Import your auth service
 import 'package:pillpall/services/task_service.dart';
-import 'package:pillpall/widget/doctor_list.dart';
-import 'package:pillpall/widget/global_homebar.dart';
-import 'package:pillpall/widget/symptom_page.dart';
-import 'package:pillpall/widget/task_page.dart';
+import 'package:pillpall/views/doctor_list.dart';
+import 'package:pillpall/views/global_homebar.dart';
+import 'package:pillpall/views/symptom_page.dart';
+import 'package:pillpall/views/task_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

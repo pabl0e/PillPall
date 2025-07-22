@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/auth_service.dart';
+import 'package:pillpall/services/auth_service.dart';
 
 class TaskService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -11,7 +11,7 @@ class TaskService {
     required String title,
     required DateTime startDate,
     required DateTime endDate,
-    required String startTime, 
+    required String startTime,
     required String endTime,
     required List<String> todos,
     required List<bool> todosChecked,
@@ -127,7 +127,11 @@ class TaskService {
   }
 
   // MISSING METHOD 1: Toggle individual todo item
-  Future<void> toggleTodoItem(String taskId, int todoIndex, bool isChecked) async {
+  Future<void> toggleTodoItem(
+    String taskId,
+    int todoIndex,
+    bool isChecked,
+  ) async {
     try {
       if (!_isSignedIn) {
         throw Exception('User must be signed in to update tasks');
@@ -135,38 +139,39 @@ class TaskService {
 
       // Get the current task document
       DocumentSnapshot doc = await _db.collection('tasks').doc(taskId).get();
-      
+
       if (!doc.exists) {
         throw Exception('Task not found');
       }
 
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      
+
       // Verify user owns this task
       if (data['userId'] != _currentUserId) {
         throw Exception('Unauthorized to modify this task');
       }
 
       List<bool> todosChecked = List<bool>.from(data['todosChecked'] ?? []);
-      
+
       // Ensure the list is long enough
       while (todosChecked.length <= todoIndex) {
         todosChecked.add(false);
       }
-      
+
       // Update the specific todo item
       todosChecked[todoIndex] = isChecked;
-      
+
       // Check if all todos are completed
       List<String> todos = List<String>.from(data['todos'] ?? []);
-      bool allCompleted = todos.isNotEmpty && todosChecked.length >= todos.length;
+      bool allCompleted =
+          todos.isNotEmpty && todosChecked.length >= todos.length;
       for (int i = 0; i < todos.length; i++) {
         if (i >= todosChecked.length || !todosChecked[i]) {
           allCompleted = false;
           break;
         }
       }
-      
+
       // Update the document
       await _db.collection('tasks').doc(taskId).update({
         'todosChecked': todosChecked,
@@ -174,7 +179,7 @@ class TaskService {
         'completedAt': allCompleted ? FieldValue.serverTimestamp() : null,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       print('Todo item toggled successfully');
     } catch (e) {
       print('Error toggling todo item: $e');
@@ -186,14 +191,14 @@ class TaskService {
   double getTaskCompletionPercentage(Map<String, dynamic> taskData) {
     List<bool> todosChecked = List<bool>.from(taskData['todosChecked'] ?? []);
     List<String> todos = List<String>.from(taskData['todos'] ?? []);
-    
+
     if (todos.isEmpty) return 0.0;
-    
+
     int completedCount = 0;
     for (int i = 0; i < todos.length && i < todosChecked.length; i++) {
       if (todosChecked[i]) completedCount++;
     }
-    
+
     return completedCount / todos.length;
   }
 
@@ -205,27 +210,27 @@ class TaskService {
       }
 
       DocumentSnapshot doc = await _db.collection('tasks').doc(taskId).get();
-      
+
       if (!doc.exists) {
         throw Exception('Task not found');
       }
 
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      
+
       if (data['userId'] != _currentUserId) {
         throw Exception('Unauthorized to modify this task');
       }
 
       List<String> todos = List<String>.from(data['todos'] ?? []);
       List<bool> todosChecked = List.filled(todos.length, isCompleted);
-      
+
       await _db.collection('tasks').doc(taskId).update({
         'todosChecked': todosChecked,
         'isCompleted': isCompleted,
         'completedAt': isCompleted ? FieldValue.serverTimestamp() : null,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       print('Task completion toggled successfully');
     } catch (e) {
       print('Error toggling task completion: $e');
@@ -281,16 +286,16 @@ class TaskService {
 
       for (var doc in snapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        
+
         if (data['isCompleted'] == true) {
           completedTasks++;
         }
 
         List<String> todos = List<String>.from(data['todos'] ?? []);
         List<bool> todosChecked = List<bool>.from(data['todosChecked'] ?? []);
-        
+
         totalTodos += todos.length;
-        
+
         for (int i = 0; i < todos.length && i < todosChecked.length; i++) {
           if (todosChecked[i]) {
             completedTodos++;
