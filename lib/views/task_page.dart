@@ -145,7 +145,7 @@ class _Task_WidgetState extends State<Task_Widget> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: Text(
-                    "Your Tasks for ${_monthName(_selectedDate.month)} ${_selectedDate.day}",
+                    "Tasks for ${_monthName(_selectedDate.month)} ${_selectedDate.day}",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -153,9 +153,9 @@ class _Task_WidgetState extends State<Task_Widget> {
                     ),
                   ),
                 ),
-                // Tasks List filtered by selected date
+                // Tasks List filtered by selected date - separated into Active and Completed
                 SizedBox(
-                  height: 400,
+                  height: 600, // Increased height to accommodate both sections
                   child: StreamBuilder<QuerySnapshot>(
                     stream: _getTasksForDate(_selectedDate),
                     builder: (context, snapshot) {
@@ -239,13 +239,92 @@ class _Task_WidgetState extends State<Task_Widget> {
                         );
                       }
 
-                      final tasks = snapshot.data!.docs;
-                      return ListView.builder(
-                        itemCount: tasks.length,
-                        itemBuilder: (context, i) {
-                          final task = tasks[i];
-                          return _buildTaskCard(task);
-                        },
+                      // Separate tasks into active and completed
+                      final allTasks = snapshot.data!.docs;
+                      final activeTasks = allTasks.where((task) {
+                        final taskData = task.data() as Map<String, dynamic>;
+                        return taskData['isCompleted'] != true;
+                      }).toList();
+                      
+                      final completedTasks = allTasks.where((task) {
+                        final taskData = task.data() as Map<String, dynamic>;
+                        return taskData['isCompleted'] == true;
+                      }).toList();
+
+                      return SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Active Tasks Section
+                            if (activeTasks.isNotEmpty) ...[
+                              Text(
+                                'Active Tasks (${activeTasks.length})',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple[700],
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              ...activeTasks.map((task) => _buildTaskCard(task)),
+                              SizedBox(height: 20),
+                            ],
+                            
+                            // Completed Tasks Section
+                            if (completedTasks.isNotEmpty) ...[
+                              Text(
+                                'Completed Tasks (${completedTasks.length})',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[700],
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              ...completedTasks.map((task) => _buildCompletedTaskCard(task)),
+                            ],
+
+                            // Show message if no active tasks
+                            if (activeTasks.isEmpty && completedTasks.isEmpty)
+                              Center(
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.task_outlined,
+                                      size: 48,
+                                      color: Colors.grey,
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'No tasks for this date',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Tap the + button to add tasks',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else if (activeTasks.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                                child: Center(
+                                  child: Text(
+                                    'No active tasks for this date',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -571,6 +650,165 @@ class _Task_WidgetState extends State<Task_Widget> {
         ),
       ),
     );
+  }
+
+  // Completed task card with simplified view
+  Widget _buildCompletedTaskCard(DocumentSnapshot task) {
+    final taskId = task.id;
+    final taskData = task.data() as Map<String, dynamic>;
+    final completionPercentage = _calculateTaskCompletionPercentage(taskData);
+
+    return Card(
+      margin: EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.grey[50],
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Task Header with completion indicator
+            Row(
+              children: [
+                Icon(
+                  Icons.task_alt,
+                  color: Colors.green,
+                  size: 24,
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    taskData['title'] ?? 'Untitled Task',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                ),
+                // Completed indicator
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'COMPLETED',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  onSelected: (value) => _handleMenuAction(value, taskId, taskData),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'mark_incomplete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.undo, color: Colors.orange),
+                          SizedBox(width: 8),
+                          Text('Mark Incomplete'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, color: Colors.deepPurple),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+
+            // Task Time Info
+            Row(
+              children: [
+                Icon(Icons.schedule, color: Colors.grey[600], size: 16),
+                SizedBox(width: 4),
+                Text(
+                  '${_formatTimeAMPM(taskData['startTime'])} - ${_formatTimeAMPM(taskData['endTime'])}',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+                Spacer(),
+                if (taskData['completedAt'] != null)
+                  Text(
+                    'Completed: ${_formatCompletedDate(taskData['completedAt'])}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
+
+            // Show completed todos count
+            if (taskData['todos'] != null && (taskData['todos'] as List).isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  '${(taskData['todos'] as List).length} tasks completed',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatCompletedDate(dynamic timestamp) {
+    try {
+      if (timestamp is Timestamp) {
+        final date = timestamp.toDate();
+        final now = DateTime.now();
+        final difference = now.difference(date);
+        
+        if (difference.inDays == 0) {
+          if (difference.inHours == 0) {
+            return '${difference.inMinutes}m ago';
+          }
+          return '${difference.inHours}h ago';
+        } else if (difference.inDays == 1) {
+          return 'Yesterday';
+        } else {
+          return '${difference.inDays}d ago';
+        }
+      }
+      return '';
+    } catch (e) {
+      return '';
+    }
   }
 
   bool _shouldShowDateRange(Map<String, dynamic> taskData) {
