@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pillpall/utils/medication_alarm_helper.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/views/global_homebar.dart';
 
 class AlarmTestPage extends StatefulWidget {
   const AlarmTestPage({super.key});
@@ -17,10 +17,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
       appBar: AppBar(
         title: Text(
           'Test Medication Alarms',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
@@ -87,7 +84,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
               ),
             ),
             SizedBox(height: 32),
-            
+
             // Sample Medications Section
             Text(
               'Sample Medications',
@@ -98,7 +95,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
               ),
             ),
             SizedBox(height: 16),
-            
+
             // Test Sample Medications
             _buildTestAlarmCard(
               'Paracetamol',
@@ -108,7 +105,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
               Icons.medication_liquid,
             ),
             SizedBox(height: 16),
-            
+
             _buildTestAlarmCard(
               'Ibuprofen',
               '200mg',
@@ -117,7 +114,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
               Icons.medication,
             ),
             SizedBox(height: 16),
-            
+
             _buildTestAlarmCard(
               'Vitamin D',
               '1000 IU',
@@ -126,7 +123,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
               Icons.health_and_safety,
             ),
             SizedBox(height: 32),
-            
+
             // Current Time Test Section
             Text(
               'Live Test',
@@ -137,7 +134,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
               ),
             ),
             SizedBox(height: 16),
-            
+
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -200,7 +197,10 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -212,7 +212,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
                 ),
               ),
             ),
-            
+
             // Add some bottom padding to account for the navigation bar
             SizedBox(height: 100),
           ],
@@ -227,12 +227,16 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
     );
   }
 
-  Widget _buildTestAlarmCard(String name, String dosage, String time, Color color, IconData icon) {
+  Widget _buildTestAlarmCard(
+    String name,
+    String dosage,
+    String time,
+    Color color,
+    IconData icon,
+  ) {
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -252,11 +256,7 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
                 color: color.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 28,
-              ),
+              child: Icon(icon, color: color, size: 28),
             ),
             SizedBox(width: 16),
             Expanded(
@@ -341,8 +341,9 @@ class _AlarmTestPageState extends State<AlarmTestPage> {
 
   void _testCurrentTimeAlarm() {
     final now = DateTime.now();
-    final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    
+    final currentTime =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
     final testMedicationData = {
       'name': 'Test Medication',
       'dosage': '1 tablet',

@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:pillpall/auth_service.dart'; // Import your auth service
+import 'package:pillpall/services/auth_service.dart'; // Import your auth service
 import 'package:pillpall/services/task_service.dart';
-import 'package:pillpall/widget/doctor_list.dart';
-import 'package:pillpall/widget/global_homebar.dart';
-import 'package:pillpall/widget/symptom_page.dart';
-import 'package:pillpall/widget/task_page.dart';
-
+import 'package:pillpall/views/doctor_list.dart';
+import 'package:pillpall/views/global_homebar.dart';
+import 'package:pillpall/views/symptom_page.dart';
+import 'package:pillpall/views/task_page.dart';
+import 'package:pillpall/views/medication_page.dart';
+import 'package:pillpall/views/alarm_test_page.dart';
+import 'package:pillpall/views/profile_page.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -114,7 +116,7 @@ class _HomePageState extends State<HomePage> {
                     Expanded(
                       flex: 2,
                       child: StreamBuilder<QuerySnapshot>(
-                        stream: _taskService.getTasks(),
+                        stream: _taskService.getTasksForDate(DateTime.now().toIso8601String().split('T')[0]),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -137,8 +139,7 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
-                          if (!snapshot.hasData ||
-                              snapshot.data!.docs.isEmpty) {
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "No tasks yet"),
@@ -152,8 +153,7 @@ class _HomePageState extends State<HomePage> {
                           return Row(
                             children: List.generate(2, (i) {
                               if (i < tasks.length) {
-                                final data =
-                                    tasks[i].data() as Map<String, dynamic>;
+                                final data = tasks[i].data() as Map<String, dynamic>;
                                 return Expanded(
                                   child: _SquareTaskCard(
                                     label: data['title'] ?? 'Untitled Task',
@@ -412,11 +412,37 @@ class _HomePageState extends State<HomePage> {
                               if (i < doctors.length) {
                                 final data =
                                     doctors[i].data() as Map<String, dynamic>;
+                                
+                                // Debug print to check doctor data
+                                print('🩺 Doctor data: $data');
+                                print('🩺 All keys: ${data.keys.toList()}');
+                                
+                                final doctorName = data['name']?.toString().trim() ?? 'Unknown Doctor';
+                                
+                                // Handle specialties array - get the first specialty
+                                String specialty = '';
+                                if (data['specialties'] is List && (data['specialties'] as List).isNotEmpty) {
+                                  specialty = (data['specialties'] as List)[0].toString().trim();
+                                } else if (data['specialty']?.toString().trim().isNotEmpty == true) {
+                                  specialty = data['specialty'].toString().trim();
+                                }
+                                
+                                // Handle mobile number
+                                final phone = data['mobileNumber']?.toString().trim() ?? 
+                                             data['phone']?.toString().trim() ?? 
+                                             data['phoneNumber']?.toString().trim() ?? 
+                                             '';
+                                
+                                print('🩺 Parsed: name=$doctorName, specialty=$specialty, phone=$phone');
+                                print('🩺 Specialty empty? ${specialty.isEmpty}');
+                                print('🩺 Phone empty? ${phone.isEmpty}');
+                                
                                 return Expanded(
                                   child: _SquareTaskCard(
-                                    label: data['name'] ?? 'Unknown Doctor',
-                                    date: data['specialty'] ?? 'No specialty',
-                                    time: data['phone'] ?? 'No phone',
+                                    label: doctorName,
+                                    date: specialty,
+                                    time: phone,
+                                    icon: Icons.local_hospital,
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -609,6 +635,7 @@ class _SymptomCard extends StatelessWidget {
                   // ✅ ENHANCED: Symptom name with severity indicator
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // Severity dot indicator
                       Container(
@@ -619,8 +646,8 @@ class _SymptomCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      SizedBox(width: 6),
-                      Expanded(
+                      SizedBox(width: 4),
+                      Flexible(
                         child: Text(
                           label,
                           style: TextStyle(
@@ -752,47 +779,60 @@ class _SquareTaskCard extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Icon (if provided)
+                  if (icon != null) ...[
+                    Icon(
+                      icon,
+                      color: Colors.deepPurple,
+                      size: 28,
+                    ),
+                    SizedBox(height: 6),
+                  ],
+                  
+                  // Label text
                   Text(
                     label,
                     style: TextStyle(
-                      color: Colors.black54,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (date != null && date!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        date!,
-                        style: TextStyle(
-                          color: Colors.deepPurple,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  
+                  // Date field (specialty for doctors)
+                  if (date != null && date!.isNotEmpty) ...[
+                    SizedBox(height: 4),
+                    Text(
+                      date!,
+                      style: TextStyle(
+                        color: Colors.deepPurple,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
                       ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  if (time != null && time!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2.0),
-                      child: Text(
-                        time!,
-                        style: TextStyle(
-                          color: Colors.teal,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  ],
+                  
+                  // Time field (phone for doctors) - Always show for debugging
+                  if (time != null && time!.isNotEmpty) ...[
+                    SizedBox(height: 3),
+                    Text(
+                      time!,
+                      style: TextStyle(
+                        color: Colors.teal,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
                       ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ],
                 ],
               ),
             ),

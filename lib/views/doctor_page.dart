@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/views/global_homebar.dart';
 
 import '../models/doctor_model.dart';
 import '../services/doctor_service.dart';

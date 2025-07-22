@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pillpall/auth_service.dart';
-import 'package:pillpall/login_page.dart';
 import 'package:pillpall/services/alarm_service.dart';
-import 'package:pillpall/widget/landing_page.dart';
+import 'package:pillpall/services/auth_service.dart';
+import 'package:pillpall/views/landing_page.dart';
+import 'package:pillpall/views/login_page.dart';
 
 class AuthLayout extends StatefulWidget {
   const AuthLayout({super.key, this.pageIfNotConnected});

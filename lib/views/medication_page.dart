@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pillpall/services/alarm_service.dart';
 import 'package:pillpall/services/medication_service.dart';
+import 'package:pillpall/services/auth_service.dart';
+import 'package:pillpall/models/medication_model.dart'; // Add this import if MedicationModel is defined here
 import 'package:pillpall/utils/medication_alarm_helper.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/views/global_homebar.dart';
 
 class Medication_Widget extends StatefulWidget {
   const Medication_Widget({super.key});
@@ -17,8 +19,11 @@ class _Medication_WidgetState extends State<Medication_Widget> {
   final MedicationService _medicationService = MedicationService();
   bool _isLoading = false;
 
+  // Returns the current user's ID
+  String? get _currentUserId => authService.value.currentUser?.uid;
+
   // Method to get medications for selected date
-  Stream<QuerySnapshot> _getMedicationsForDate(DateTime date) {
+  Stream<List<MedicationModel>> _getMedicationsForDate(DateTime date) {
     String dateString = date.toIso8601String().split('T')[0];
     return _medicationService.getMedicationsForDate(dateString);
   }
@@ -88,7 +93,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                 // Medications List filtered by selected date
                 SizedBox(
                   height: 400,
-                  child: StreamBuilder<QuerySnapshot>(
+                  child: StreamBuilder<List<MedicationModel>>(
                     stream: _getMedicationsForDate(_selectedDate),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -142,7 +147,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                         );
                       }
 
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -171,18 +176,12 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                         );
                       }
 
-                      final medications = snapshot.data!.docs;
+                      final medications = snapshot.data!;
                       return ListView.builder(
                         itemCount: medications.length,
                         itemBuilder: (context, i) {
                           final medication = medications[i];
-                          final medicationData =
-                              medication.data() as Map<String, dynamic>;
-
-                          return _buildMedicationCard(
-                            medication.id,
-                            medicationData,
-                          );
+                          return _buildMedicationCard(medication);
                         },
                       );
                     },
@@ -234,27 +233,24 @@ class _Medication_WidgetState extends State<Medication_Widget> {
   }
 
   // Enhanced medication card with TEST ALARM button
-  Widget _buildMedicationCard(
-    String medicationId,
-    Map<String, dynamic> medicationData,
-  ) {
-    final medicationName = medicationData['name'] ?? 'Unknown Medication';
-    final dosage = medicationData['dosage'] ?? '';
-    final time = medicationData['time'] ?? '';
-    final isDueNow = MedicationAlarmHelper.isMedicationDueNow(medicationData);
+  Widget _buildMedicationCard(MedicationModel medication) {
+    final medicationName = medication.name;
+    final dosage = medication.dosage;
+    final time = medication.time;
+    final isDueNow = MedicationAlarmHelper.isMedicationDueNow({
+      'date': medication.date,
+      'time': medication.time,
+    });
 
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      // Highlight card if medication is due now
-      color: isDueNow ? Colors.red[50] : null,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Medication Header
             Row(
               children: [
                 Icon(
@@ -275,7 +271,6 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                     ),
                   ),
                 ),
-                // Due now indicator
                 if (isDueNow)
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -295,18 +290,13 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                 SizedBox(width: 8),
                 PopupMenuButton<String>(
                   onSelected: (value) =>
-                      _handleMenuAction(value, medicationId, medicationData),
+                      _handleMenuAction(value, medication.id ?? '', {
+                        'name': medication.name,
+                        'dosage': medication.dosage,
+                        'date': medication.date,
+                        'time': medication.time,
+                      }),
                   itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'test_alarm',
-                      child: Row(
-                        children: [
-                          Icon(Icons.alarm, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text('Test Alarm'),
-                        ],
-                      ),
-                    ),
                     PopupMenuItem(
                       value: 'edit',
                       child: Row(
@@ -334,23 +324,19 @@ class _Medication_WidgetState extends State<Medication_Widget> {
             SizedBox(height: 12),
 
             // Medication Details
-            if (dosage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
-                  children: [
-                    Icon(Icons.science, color: Colors.blue, size: 18),
-                    SizedBox(width: 4),
-                    Text(
-                      'Dosage: $dosage',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+            Row(
+              children: [
+                Icon(Icons.science, color: Colors.blue, size: 18),
+                SizedBox(width: 4),
+                Text(
+                  'Dosage: $dosage',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
+              ],
+            ),
 
             // Time Info
             if (time.isNotEmpty)
@@ -373,58 +359,34 @@ class _Medication_WidgetState extends State<Medication_Widget> {
             // Action Buttons Row
             Row(
               children: [
-                // Test Alarm Button (prominent)
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _testAlarm(medicationId, medicationData),
-                    icon: Icon(Icons.alarm, size: 18),
-                    label: Text('Test Alarm'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                if (isDueNow)
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _triggerAlarmNow(medication.id ?? '', {
+                        'name': medication.name,
+                        'dosage': medication.dosage,
+                        'date': medication.date,
+                        'time': medication.time,
+                      }),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
+                      child: Text('TAKE NOW'),
                     ),
                   ),
-                ),
-
-                SizedBox(width: 8),
-
-                // Quick Actions
-                if (isDueNow) ...[
-                  ElevatedButton(
-                    onPressed: () =>
-                        _triggerAlarmNow(medicationId, medicationData),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text('TAKE NOW'),
-                  ),
-                ],
               ],
             ),
           ],
         ),
       ),
-    );
-  }
-
-  // Test alarm method
-  void _testAlarm(String medicationId, Map<String, dynamic> medicationData) {
-    AlarmService().triggerMedicationAlarm(
-      context,
-      medicationId: medicationId,
-      medicationData: medicationData,
     );
   }
 
@@ -446,9 +408,6 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     Map<String, dynamic> medicationData,
   ) async {
     switch (action) {
-      case 'test_alarm':
-        _testAlarm(medicationId, medicationData);
-        break;
       case 'edit':
         await _showEditMedicationDialog(medicationId, medicationData);
         break;
@@ -566,12 +525,21 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                     });
 
                     try {
+                      // Format time consistently 
+                      String formatTimeForDatabase(TimeOfDay time) {
+                        final hour = time.hour.toString().padLeft(2, '0');
+                        final minute = time.minute.toString().padLeft(2, '0');
+                        return '$hour:$minute';
+                      }
+
                       await _medicationService.addMedication(
-                        name: nameController.text.trim(),
-                        dosage: dosageController.text.trim(),
-                        date: selectedDate,
-                        time:
-                            '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                        MedicationModel(
+                          name: nameController.text.trim(),
+                          dosage: dosageController.text.trim(),
+                          date: selectedDate.toIso8601String().split('T')[0],
+                          time: formatTimeForDatabase(selectedTime),
+                          userId: _currentUserId ?? '',
+                        ),
                       );
 
                       Navigator.of(context).pop();
@@ -610,8 +578,187 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     String medicationId,
     Map<String, dynamic> medicationData,
   ) async {
-    // Implementation for edit dialog (similar to add dialog but with existing data)
-    // ... (implement as needed)
+    TextEditingController nameController = TextEditingController(
+      text: medicationData['name'] ?? '',
+    );
+    TextEditingController dosageController = TextEditingController(
+      text: medicationData['dosage'] ?? '',
+    );
+
+    // Parse the existing date
+    DateTime selectedDate;
+    try {
+      selectedDate = DateTime.parse(medicationData['date'] ?? DateTime.now().toIso8601String());
+    } catch (e) {
+      selectedDate = DateTime.now();
+    }
+
+    // Parse the existing time
+    TimeOfDay selectedTime;
+    try {
+      String timeStr = medicationData['time']?.toString() ?? '00:00';
+      // Remove any AM/PM and convert to 24-hour format if needed
+      timeStr = timeStr.replaceAll(RegExp(r'\s*(AM|PM)\s*', caseSensitive: false), '');
+      
+      final timeParts = timeStr.split(':');
+      selectedTime = TimeOfDay(
+        hour: int.parse(timeParts[0]),
+        minute: int.parse(timeParts[1]),
+      );
+    } catch (e) {
+      print('Error parsing medication time: $e');
+      selectedTime = TimeOfDay.now();
+    }
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('Edit Medication'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Medication Name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: dosageController,
+                      decoration: InputDecoration(
+                        labelText: 'Dosage (e.g., 5mg, 1 tablet)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+
+                    // Date Picker
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+                          ),
+                        ),
+                        TextButton(
+                          child: Text('Change'),
+                          onPressed: () async {
+                            DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: DateTime(DateTime.now().year - 1),
+                              lastDate: DateTime(DateTime.now().year + 2),
+                            );
+                            if (picked != null) {
+                              setDialogState(() {
+                                selectedDate = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+
+                    // Time Picker
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text("Time: ${selectedTime.format(context)}"),
+                        ),
+                        TextButton(
+                          child: Text('Pick'),
+                          onPressed: () async {
+                            TimeOfDay? picked = await showTimePicker(
+                              context: context,
+                              initialTime: selectedTime,
+                            );
+                            if (picked != null) {
+                              setDialogState(() {
+                                selectedTime = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                ElevatedButton(
+                  child: Text('Save Changes'),
+                  onPressed: () async {
+                    if (nameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please enter medication name')),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      _isLoading = true;
+                    });
+
+                    try {
+                      // Format time consistently 
+                      String formatTimeForDatabase(TimeOfDay time) {
+                        final hour = time.hour.toString().padLeft(2, '0');
+                        final minute = time.minute.toString().padLeft(2, '0');
+                        return '$hour:$minute';
+                      }
+
+                      // Create updated medication model
+                      MedicationModel updatedMedication = MedicationModel(
+                        id: medicationId,
+                        name: nameController.text.trim(),
+                        dosage: dosageController.text.trim(),
+                        date: selectedDate.toIso8601String().split('T')[0],
+                        time: formatTimeForDatabase(selectedTime),
+                        userId: _currentUserId ?? '',
+                      );
+
+                      await _medicationService.updateMedication(updatedMedication);
+
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Medication updated successfully!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      print('Error updating medication: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Failed to update medication. Please try again.',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    } finally {
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _showDeleteConfirmation(String medicationId) async {

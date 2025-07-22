@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pillpall/widget/add_doctor.dart';
-import 'package:pillpall/widget/doctor_page.dart';
-import 'package:pillpall/widget/edit_doctor.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/views/add_doctor.dart';
+import 'package:pillpall/views/doctor_page.dart';
+import 'package:pillpall/views/edit_doctor.dart';
+import 'package:pillpall/views/global_homebar.dart';
 
 import '../models/doctor_model.dart';
 import '../services/doctor_service.dart';

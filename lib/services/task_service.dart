@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/auth_service.dart';
+import 'package:pillpall/services/auth_service.dart';
+import 'package:pillpall/models/task_model.dart';
 
 class TaskService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -11,7 +12,7 @@ class TaskService {
     required String title,
     required DateTime startDate,
     required DateTime endDate,
-    required String startTime, 
+    required String startTime,
     required String endTime,
     required List<String> todos,
     required List<bool> todosChecked,
@@ -59,145 +60,103 @@ class TaskService {
       print('Error getting tasks for date: $e');
       rethrow;
     }
+  Stream<List<TaskModel>> getTasksForDate(String dateString) {
+    if (!_isSignedIn) {
+      throw Exception('User must be signed in to view tasks');
+    }
+    return _db
+        .collection('tasks')
+        .where('userId', isEqualTo: _currentUserId)
+        .where('date', isEqualTo: dateString)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TaskModel.fromFirestore(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
-  Stream<QuerySnapshot> getTasks() {
-    try {
-      if (!_isSignedIn) {
-        throw Exception('User must be signed in to view tasks');
-      }
-
-      return _db
-          .collection('tasks')
-          .where('userId', isEqualTo: _currentUserId)
-          .orderBy('createdAt', descending: true)
-          .snapshots();
-    } catch (e) {
-      print('Error getting tasks stream: $e');
-      rethrow;
+  Future<void> addTask(TaskModel task) async {
+    if (!_isSignedIn) {
+      throw Exception('User must be signed in to add tasks');
     }
+    await _db.collection('tasks').add(task.toFirestore());
   }
 
-  Future<void> updateTask(
-    String id, {
-    required String title,
-    required DateTime startDate,
-    required DateTime endDate,
-    required String startTime,
-    required String endTime,
-    required List<String> todos,
-    required List<bool> todosChecked,
-  }) async {
-    try {
-      if (!_isSignedIn) {
-        throw Exception('User must be signed in to update tasks');
-      }
-
-      await _db.collection('tasks').doc(id).update({
-        'title': title.trim(),
-        'startDate': startDate.toIso8601String(),
-        'endDate': endDate.toIso8601String(),
-        'startDateOnly': startDate.toIso8601String().split('T')[0],
-        'endDateOnly': endDate.toIso8601String().split('T')[0],
-        'startTime': startTime,
-        'endTime': endTime,
-        'todos': todos,
-        'todosChecked': todosChecked,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      print('Task updated successfully');
-    } catch (e) {
-      print('Error updating task: $e');
-      rethrow;
+  Stream<List<TaskModel>> getTasks() {
+    if (!_isSignedIn) {
+      throw Exception('User must be signed in to view tasks');
     }
+    return _db
+        .collection('tasks')
+        .where('userId', isEqualTo: _currentUserId)
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TaskModel.fromFirestore(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  Future<void> updateTask(TaskModel task) async {
+    if (!_isSignedIn) {
+      throw Exception('User must be signed in to update tasks');
+    }
+    await _db.collection('tasks').doc(task.id).update(task.toFirestore());
   }
 
   Future<void> deleteTask(String id) async {
-    try {
-      if (!_isSignedIn) {
-        throw Exception('User must be signed in to delete tasks');
-      }
-
-      await _db.collection('tasks').doc(id).delete();
-      print('Task deleted successfully');
-    } catch (e) {
-      print('Error deleting task: $e');
-      rethrow;
+    if (!_isSignedIn) {
+      throw Exception('User must be signed in to delete tasks');
     }
+    await _db.collection('tasks').doc(id).delete();
   }
 
-  // MISSING METHOD 1: Toggle individual todo item
-  Future<void> toggleTodoItem(String taskId, int todoIndex, bool isChecked) async {
-    try {
-      if (!_isSignedIn) {
-        throw Exception('User must be signed in to update tasks');
-      }
-
-      // Get the current task document
-      DocumentSnapshot doc = await _db.collection('tasks').doc(taskId).get();
-      
-      if (!doc.exists) {
-        throw Exception('Task not found');
-      }
-
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      
-      // Verify user owns this task
-      if (data['userId'] != _currentUserId) {
-        throw Exception('Unauthorized to modify this task');
-      }
-
-      List<bool> todosChecked = List<bool>.from(data['todosChecked'] ?? []);
-      
-      // Ensure the list is long enough
-      while (todosChecked.length <= todoIndex) {
-        todosChecked.add(false);
-      }
-      
-      // Update the specific todo item
-      todosChecked[todoIndex] = isChecked;
-      
-      // Check if all todos are completed
-      List<String> todos = List<String>.from(data['todos'] ?? []);
-      bool allCompleted = todos.isNotEmpty && todosChecked.length >= todos.length;
-      for (int i = 0; i < todos.length; i++) {
-        if (i >= todosChecked.length || !todosChecked[i]) {
-          allCompleted = false;
-          break;
-        }
-      }
-      
-      // Update the document
-      await _db.collection('tasks').doc(taskId).update({
-        'todosChecked': todosChecked,
-        'isCompleted': allCompleted,
-        'completedAt': allCompleted ? FieldValue.serverTimestamp() : null,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      
-      print('Todo item toggled successfully');
-    } catch (e) {
-      print('Error toggling todo item: $e');
-      rethrow;
+  Future<double> getTaskCompletionPercentage(String dateString) async {
+    if (!_isSignedIn) {
+      throw Exception(
+        'User must be signed in to view task completion percentage',
+      );
     }
+
+    final snapshot = await _db
+        .collection('tasks')
+        .where('userId', isEqualTo: _currentUserId)
+        .where('date', isEqualTo: dateString)
+        .get();
+
+    final tasks = snapshot.docs
+        .map((doc) => TaskModel.fromFirestore(doc.data(), doc.id))
+        .toList();
+    if (tasks.isEmpty) return 0.0;
+
+    final completedTasks = tasks
+        .where((task) => task.todos.every((todo) => todo.isCompleted))
+        .length;
+    return completedTasks / tasks.length;
   }
 
-  // MISSING METHOD 2: Get task completion percentage
-  double getTaskCompletionPercentage(Map<String, dynamic> taskData) {
-    List<bool> todosChecked = List<bool>.from(taskData['todosChecked'] ?? []);
-    List<String> todos = List<String>.from(taskData['todos'] ?? []);
-    
-    if (todos.isEmpty) return 0.0;
-    
-    int completedCount = 0;
-    for (int i = 0; i < todos.length && i < todosChecked.length; i++) {
-      if (todosChecked[i]) completedCount++;
+  Future<void> toggleTodoItem(
+    String taskId,
+    int todoIndex,
+    bool isCompleted,
+  ) async {
+    if (!_isSignedIn) {
+      throw Exception('User must be signed in to toggle todo items');
     }
-    
-    return completedCount / todos.length;
+
+    final taskDoc = await _db.collection('tasks').doc(taskId).get();
+    if (!taskDoc.exists) {
+      throw Exception('Task not found');
+    }
+
+    final task = TaskModel.fromFirestore(taskDoc.data()!, taskDoc.id);
+    task.todos[todoIndex].isCompleted = isCompleted;
+
+    await _db.collection('tasks').doc(taskId).update(task.toFirestore());
   }
 
-  // MISSING METHOD 3: Mark entire task as complete/incomplete
   Future<void> toggleTaskCompletion(String taskId, bool isCompleted) async {
     try {
       if (!_isSignedIn) {
@@ -205,27 +164,27 @@ class TaskService {
       }
 
       DocumentSnapshot doc = await _db.collection('tasks').doc(taskId).get();
-      
+
       if (!doc.exists) {
         throw Exception('Task not found');
       }
 
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      
+
       if (data['userId'] != _currentUserId) {
         throw Exception('Unauthorized to modify this task');
       }
 
       List<String> todos = List<String>.from(data['todos'] ?? []);
       List<bool> todosChecked = List.filled(todos.length, isCompleted);
-      
+
       await _db.collection('tasks').doc(taskId).update({
         'todosChecked': todosChecked,
         'isCompleted': isCompleted,
         'completedAt': isCompleted ? FieldValue.serverTimestamp() : null,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       print('Task completion toggled successfully');
     } catch (e) {
       print('Error toggling task completion: $e');
@@ -281,16 +240,16 @@ class TaskService {
 
       for (var doc in snapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        
+
         if (data['isCompleted'] == true) {
           completedTasks++;
         }
 
         List<String> todos = List<String>.from(data['todos'] ?? []);
         List<bool> todosChecked = List<bool>.from(data['todosChecked'] ?? []);
-        
+
         totalTodos += todos.length;
-        
+
         for (int i = 0; i < todos.length && i < todosChecked.length; i++) {
           if (todosChecked[i]) {
             completedTodos++;
@@ -367,4 +326,5 @@ class TaskService {
       rethrow;
     }
   }
+}
 }
