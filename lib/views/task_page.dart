@@ -392,16 +392,6 @@ class _Task_WidgetState extends State<Task_Widget> {
                   onSelected: (value) => _handleMenuAction(value, taskId, taskData),
                   itemBuilder: (context) => [
                     PopupMenuItem(
-                      value: 'test_alarm',
-                      child: Row(
-                        children: [
-                          Icon(Icons.alarm, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text('Test Alarm'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
                       value: isFullyCompleted
                           ? 'mark_incomplete'
                           : 'mark_complete',
@@ -557,37 +547,23 @@ class _Task_WidgetState extends State<Task_Widget> {
             // Action Buttons Row
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _testTaskAlarm(taskId, taskData),
-                    icon: Icon(Icons.alarm, size: 18),
-                    label: Text('Test Alarm'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8),
                 if (isDueNow || isActive)
-                  ElevatedButton(
-                    onPressed: () => _triggerTaskAlarmNow(taskId, taskData),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDueNow ? Colors.red : Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _triggerTaskAlarmNow(taskId, taskData),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDueNow ? Colors.red : Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      child: Text(isDueNow ? 'START NOW' : 'VIEW ACTIVE'),
                     ),
-                    child: Text(isDueNow ? 'START NOW' : 'VIEW ACTIVE'),
                   ),
               ],
             ),
@@ -653,15 +629,6 @@ class _Task_WidgetState extends State<Task_Widget> {
     }
   }
 
-  // Test task alarm method
-  void _testTaskAlarm(String taskId, Map<String, dynamic> taskData) {
-    AlarmService().triggerTaskAlarm(
-      context,
-      taskId: taskId,
-      taskData: taskData,
-    );
-  }
-
   // Trigger task alarm for due/active task
   void _triggerTaskAlarmNow(String taskId, Map<String, dynamic> taskData) {
     AlarmService().triggerTaskAlarm(
@@ -679,9 +646,6 @@ class _Task_WidgetState extends State<Task_Widget> {
     print('🔧 Menu action: $action for task $taskId');
     
     switch (action) {
-      case 'test_alarm':
-        _testTaskAlarm(taskId, taskData);
-        break;
       case 'edit':
         print('🔧 Opening edit dialog for task: ${taskData['title']}');
         await _showEditTaskDialog(taskId, taskData);

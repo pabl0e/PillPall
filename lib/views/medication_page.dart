@@ -298,16 +298,6 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                       }),
                   itemBuilder: (context) => [
                     PopupMenuItem(
-                      value: 'test_alarm',
-                      child: Row(
-                        children: [
-                          Icon(Icons.alarm, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text('Test Alarm'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
                       value: 'edit',
                       child: Row(
                         children: [
@@ -369,47 +359,28 @@ class _Medication_WidgetState extends State<Medication_Widget> {
             // Action Buttons Row
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _testAlarm(medication.id ?? '', {
-                      'name': medication.name,
-                      'dosage': medication.dosage,
-                      'date': medication.date,
-                      'time': medication.time,
-                    }),
-                    icon: Icon(Icons.alarm, size: 18),
-                    label: Text('Test Alarm'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8),
                 if (isDueNow)
-                  ElevatedButton(
-                    onPressed: () => _triggerAlarmNow(medication.id ?? '', {
-                      'name': medication.name,
-                      'dosage': medication.dosage,
-                      'date': medication.date,
-                      'time': medication.time,
-                    }),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _triggerAlarmNow(medication.id ?? '', {
+                        'name': medication.name,
+                        'dosage': medication.dosage,
+                        'date': medication.date,
+                        'time': medication.time,
+                      }),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      child: Text('TAKE NOW'),
                     ),
-                    child: Text('TAKE NOW'),
                   ),
               ],
             ),
