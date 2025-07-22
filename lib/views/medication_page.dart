@@ -390,15 +390,6 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     );
   }
 
-  // Test alarm method
-  void _testAlarm(String medicationId, Map<String, dynamic> medicationData) {
-    AlarmService().triggerMedicationAlarm(
-      context,
-      medicationId: medicationId,
-      medicationData: medicationData,
-    );
-  }
-
   // Trigger alarm for due medication
   void _triggerAlarmNow(
     String medicationId,
@@ -417,9 +408,6 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     Map<String, dynamic> medicationData,
   ) async {
     switch (action) {
-      case 'test_alarm':
-        _testAlarm(medicationId, medicationData);
-        break;
       case 'edit':
         await _showEditMedicationDialog(medicationId, medicationData);
         break;
