@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pillpall/services/medication_service.dart';
 
 class MedicationAlarmPage extends StatefulWidget {
@@ -28,7 +27,7 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
   late AnimationController _pulseController;
   late Animation<double> _bellAnimation;
   late Animation<double> _pulseAnimation;
-  
+
   final MedicationService _medicationService = MedicationService();
   bool _isLoading = false;
   int? _selectedSnoozeMinutes;
@@ -36,32 +35,24 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
   @override
   void initState() {
     super.initState();
-    
+
     // Bell shake animation
     _bellController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _bellAnimation = Tween<double>(
-      begin: -0.1,
-      end: 0.1,
-    ).animate(CurvedAnimation(
-      parent: _bellController,
-      curve: Curves.elasticInOut,
-    ));
+    _bellAnimation = Tween<double>(begin: -0.1, end: 0.1).animate(
+      CurvedAnimation(parent: _bellController, curve: Curves.elasticInOut),
+    );
 
     // Pulse animation for the background
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(
-      begin: 0.95,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     // Start animations
     _bellController.repeat(reverse: true);
@@ -87,7 +78,7 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
   String _getMedicationTime() {
     final time = widget.medicationData['time'] ?? '';
     if (time.isEmpty) return _getCurrentTime();
-    
+
     try {
       // Convert 24-hour format to 12-hour format with AM/PM
       final parts = time.split(':');
@@ -101,22 +92,22 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
     } catch (e) {
       print('Error parsing time: $e');
     }
-    
+
     return _getCurrentTime();
   }
 
   Future<void> _markAsTaken() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // You can add logic here to mark medication as taken
       // For example, update a "taken" status or log the intake
       await Future.delayed(Duration(milliseconds: 500)); // Simulate API call
-      
+
       if (widget.onTaken != null) {
         widget.onTaken!();
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -151,15 +142,15 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
 
   Future<void> _skipMedication() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // You can add logic here to log skipped medication
       await Future.delayed(Duration(milliseconds: 500)); // Simulate API call
-      
+
       if (widget.onSkipped != null) {
         widget.onSkipped!();
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -196,7 +187,7 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
     if (widget.onSnoozed != null) {
       widget.onSnoozed!(minutes);
     }
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -215,7 +206,8 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
 
   @override
   Widget build(BuildContext context) {
-    final medicationName = widget.medicationData['name'] ?? 'Unknown Medication';
+    final medicationName =
+        widget.medicationData['name'] ?? 'Unknown Medication';
     final dosage = widget.medicationData['dosage'] ?? '';
     final currentTime = _getMedicationTime();
 
@@ -252,7 +244,7 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                 ],
               ),
             ),
-            
+
             // Main content
             Expanded(
               child: Container(
@@ -301,9 +293,9 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                         );
                       },
                     ),
-                    
+
                     SizedBox(height: 40),
-                    
+
                     // Time display
                     Text(
                       currentTime,
@@ -313,9 +305,9 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                         color: Colors.white,
                       ),
                     ),
-                    
+
                     SizedBox(height: 30),
-                    
+
                     // Medication name and dosage
                     Text(
                       '$medicationName${dosage.isNotEmpty ? ' • $dosage' : ''}',
@@ -326,18 +318,14 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    
+
                     SizedBox(height: 16),
-                    
+
                     // Tablet icon and text
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.medication,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                        Icon(Icons.medication, color: Colors.white, size: 20),
                         SizedBox(width: 8),
                         Text(
                           'Tablet',
@@ -349,9 +337,9 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                         ),
                       ],
                     ),
-                    
+
                     SizedBox(height: 60),
-                    
+
                     // Snooze reminder section
                     Text(
                       'Snooze reminder:',
@@ -361,9 +349,9 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    
+
                     SizedBox(height: 20),
-                    
+
                     // Snooze time options
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -380,7 +368,7 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                             width: 50,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: isSelected 
+                              color: isSelected
                                   ? Colors.white.withOpacity(0.3)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
@@ -417,7 +405,7 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                 ),
               ),
             ),
-            
+
             // Bottom buttons
             Container(
               padding: EdgeInsets.all(20),
@@ -445,9 +433,9 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                       ),
                     ),
                   ),
-                  
+
                   SizedBox(width: 16),
-                  
+
                   // Taken button
                   Expanded(
                     child: ElevatedButton(
@@ -467,7 +455,9 @@ class _MedicationAlarmPageState extends State<MedicationAlarmPage>
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(

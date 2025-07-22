@@ -1,56 +1,58 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/widget/medication_alarm_page.dart';
+import 'package:flutter/material.dart';
+import 'package:pillpall/services/auth_service.dart';
 import 'package:pillpall/services/medication_service.dart';
-import 'package:pillpall/auth_service.dart';
+import 'package:pillpall/views/medication_alarm_page.dart';
 
 class AlarmService {
   static final AlarmService _instance = AlarmService._internal();
   factory AlarmService() => _instance;
-  
+
   final MedicationService _medicationService = MedicationService();
   Timer? _medicationCheckTimer;
   bool _isInitialized = false;
   BuildContext? _context;
   String? _initializedForUserId;
-  Set<String> _triggeredAlarms = {}; // Track triggered alarms to prevent duplicates
-  
+  Set<String> _triggeredAlarms =
+      {}; // Track triggered alarms to prevent duplicates
+
   // Private constructor
   AlarmService._internal();
 
   // Initialize the alarm service - ONLY call this after user authentication
   void initialize(BuildContext context) {
     final currentUser = authService.value.currentUser;
-    
+
     // Strict validation - don't initialize without authenticated user
     if (currentUser == null) {
       print('❌ Cannot initialize AlarmService: No authenticated user');
       return;
     }
-    
+
     final userId = currentUser.uid;
-    
+
     // Don't reinitialize for the same user
     if (_isInitialized && _initializedForUserId == userId) {
       print('ℹ️ AlarmService already initialized for user: $userId');
       return;
     }
-    
+
     // Dispose any existing service first
     if (_isInitialized) {
       print('🔄 Reinitializing AlarmService for new user');
       _disposeInternal();
     }
-    
+
     _context = context;
     _isInitialized = true;
     _initializedForUserId = userId;
     _triggeredAlarms.clear(); // Clear previous alarms
-    
+
     print('🚀 Initializing AlarmService for user: $userId');
     print('📅 Current time: ${DateTime.now()}');
-    
+
     // ✅ ENHANCED: Check every 10 seconds for better precision
     _medicationCheckTimer = Timer.periodic(Duration(seconds: 10), (timer) {
       if (_isInitialized && _context != null && _context!.mounted) {
@@ -60,7 +62,7 @@ class AlarmService {
         timer.cancel();
       }
     });
-    
+
     // Run initial check after a short delay to ensure everything is ready
     Future.delayed(Duration(seconds: 2), () {
       if (_isInitialized && _context != null && _context!.mounted) {
@@ -68,7 +70,7 @@ class AlarmService {
         _checkForDueMedications(_context!);
       }
     });
-    
+
     // ✅ NEW: Clear triggered alarms every hour to allow re-triggering
     Timer.periodic(Duration(hours: 1), (timer) {
       if (_isInitialized) {
@@ -79,7 +81,7 @@ class AlarmService {
         timer.cancel();
       }
     });
-    
+
     print('✅ AlarmService initialized successfully for user: $userId');
   }
 
@@ -89,12 +91,12 @@ class AlarmService {
       print('ℹ️ AlarmService not initialized, nothing to dispose');
       return;
     }
-    
+
     print('🛑 Disposing AlarmService for user: $_initializedForUserId');
     _disposeInternal();
     print('✅ AlarmService disposed successfully');
   }
-  
+
   void _disposeInternal() {
     _medicationCheckTimer?.cancel();
     _medicationCheckTimer = null;
@@ -112,39 +114,52 @@ class AlarmService {
         print('⚠️ User signed out during medication check, stopping');
         return;
       }
-      
+
       final userId = currentUser.uid;
       if (userId != _initializedForUserId) {
         print('⚠️ User changed during medication check, stopping');
         return;
       }
-      
+
       final now = DateTime.now();
       final currentDate = now.toIso8601String().split('T')[0];
-      final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-      
+      final currentTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
       // ✅ ENHANCED: More detailed logging with seconds
-      final currentTimeWithSeconds = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-      print('🔍 Checking medications for user $userId at $currentTimeWithSeconds on $currentDate');
-      
+      final currentTimeWithSeconds =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+      print(
+        '🔍 Checking medications for user $userId at $currentTimeWithSeconds on $currentDate',
+      );
+
       // Query medications that are due now (with enhanced tolerance)
-      final dueMedications = await _getMedicationsDueNowWithTolerance(currentDate, currentTime, userId);
-      
+      final dueMedications = await _getMedicationsDueNowWithTolerance(
+        currentDate,
+        currentTime,
+        userId,
+      );
+
       if (dueMedications.isNotEmpty) {
         print('⏰ Found ${dueMedications.length} medications due now:');
         for (var medication in dueMedications) {
-          final medicationKey = '${medication['id']}_${currentDate}_${medication['time']}';
-          
+          final medicationKey =
+              '${medication['id']}_${currentDate}_${medication['time']}';
+
           // ✅ ENHANCED: Prevent duplicate alarms for the same medication/time
           if (!_triggeredAlarms.contains(medicationKey)) {
-            print('  🔔 NEW ALARM: ${medication['name']} at ${medication['time']}');
+            print(
+              '  🔔 NEW ALARM: ${medication['name']} at ${medication['time']}',
+            );
             _triggeredAlarms.add(medicationKey);
-            
+
             if (_isInitialized && context.mounted) {
               _showMedicationAlarm(context, medication['id'], medication);
             }
           } else {
-            print('  ⏭️ SKIPPED: ${medication['name']} at ${medication['time']} (already triggered)');
+            print(
+              '  ⏭️ SKIPPED: ${medication['name']} at ${medication['time']} (already triggered)',
+            );
           }
         }
       } else {
@@ -160,7 +175,7 @@ class AlarmService {
 
   // Enhanced method to get medications due now with better tolerance
   Future<List<Map<String, dynamic>>> _getMedicationsDueNowWithTolerance(
-    String currentDate, 
+    String currentDate,
     String currentTime,
     String userId,
   ) async {
@@ -171,7 +186,9 @@ class AlarmService {
       final currentMinute = int.parse(timeParts[1]);
       final currentTotalMinutes = currentHour * 60 + currentMinute;
 
-      print('🔎 Querying medications for user: $userId, date: $currentDate, time: $currentTime');
+      print(
+        '🔎 Querying medications for user: $userId, date: $currentDate, time: $currentTime',
+      );
 
       // Query all medications for today for this specific user
       final snapshot = await FirebaseFirestore.instance
@@ -187,28 +204,29 @@ class AlarmService {
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final medicationTime = data['time'] ?? '';
-        
+
         if (medicationTime.isNotEmpty) {
           final medTimeParts = medicationTime.split(':');
           if (medTimeParts.length >= 2) {
             final medHour = int.parse(medTimeParts[0]);
             final medMinute = int.parse(medTimeParts[1]);
             final medTotalMinutes = medHour * 60 + medMinute;
-            
+
             // ✅ ENHANCED: Check if medication is due now (with 3-minute tolerance window)
             final timeDifference = currentTotalMinutes - medTotalMinutes;
-            
-            print('⏱️ ${data['name']}: scheduled ${medicationTime} (${medTotalMinutes}min), current ${currentTime} (${currentTotalMinutes}min), diff: ${timeDifference}min');
-            
+
+            print(
+              '⏱️ ${data['name']}: scheduled ${medicationTime} (${medTotalMinutes}min), current ${currentTime} (${currentTotalMinutes}min), diff: ${timeDifference}min',
+            );
+
             // Medication is due if:
             // - It's exactly the right time (diff = 0)
             // - It's up to 2 minutes late (diff = 1 or 2)
             if (timeDifference >= 0 && timeDifference <= 2) {
-              print('✅ Medication ${data['name']} is due! (${timeDifference}min ${timeDifference == 0 ? 'on time' : 'late'})');
-              dueMedications.add({
-                'id': doc.id,
-                ...data,
-              });
+              print(
+                '✅ Medication ${data['name']} is due! (${timeDifference}min ${timeDifference == 0 ? 'on time' : 'late'})',
+              );
+              dueMedications.add({'id': doc.id, ...data});
             }
             // ❌ REMOVED: Early trigger logic that was causing 12:29 trigger for 12:30 medication
             // } else if (timeDifference < 0 && timeDifference >= -1) {
@@ -231,7 +249,7 @@ class AlarmService {
 
   // Show medication alarm
   void _showMedicationAlarm(
-    BuildContext context, 
+    BuildContext context,
     String medicationId,
     Map<String, dynamic> medicationData,
   ) {
@@ -240,7 +258,7 @@ class AlarmService {
         final navigator = Navigator.maybeOf(context);
         if (navigator != null) {
           print('🚨 Showing medication alarm for: ${medicationData['name']}');
-          
+
           navigator.push(
             MaterialPageRoute(
               builder: (context) => MedicationAlarmPage(
@@ -253,7 +271,12 @@ class AlarmService {
                   _logMedicationSkipped(medicationId, medicationData);
                 },
                 onSnoozed: (minutes) {
-                  _scheduleSnoozedAlarm(context, medicationId, medicationData, minutes);
+                  _scheduleSnoozedAlarm(
+                    context,
+                    medicationId,
+                    medicationData,
+                    minutes,
+                  );
                 },
               ),
               fullscreenDialog: true,
@@ -286,7 +309,7 @@ class AlarmService {
         'status': 'taken',
         'userId': medicationData['userId'],
       });
-      
+
       print('✅ Medication marked as taken and logged');
     } catch (e) {
       print('❌ Error logging medication taken: $e');
@@ -308,7 +331,7 @@ class AlarmService {
         'status': 'skipped',
         'userId': medicationData['userId'],
       });
-      
+
       print('⏭️ Medication marked as skipped and logged');
     } catch (e) {
       print('❌ Error logging medication skipped: $e');
@@ -333,12 +356,13 @@ class AlarmService {
         'status': 'snoozed',
         'userId': medicationData['userId'],
       });
-      
+
       print('⏰ Scheduling snoozed alarm for $minutes minutes');
-      
+
       // ✅ ENHANCED: Create unique key for snoozed alarm
-      final snoozeKey = '${medicationId}_snooze_${DateTime.now().millisecondsSinceEpoch}';
-      
+      final snoozeKey =
+          '${medicationId}_snooze_${DateTime.now().millisecondsSinceEpoch}';
+
       Future.delayed(Duration(minutes: minutes), () {
         if (_isInitialized && context.mounted) {
           print('🔔 Showing snoozed alarm for: ${medicationData['name']}');
@@ -347,7 +371,7 @@ class AlarmService {
           _showMedicationAlarm(context, medicationId, medicationData);
         }
       });
-      
+
       print('⏰ Medication snoozed for $minutes minutes');
     } catch (e) {
       print('❌ Error logging medication snooze: $e');
@@ -364,7 +388,7 @@ class AlarmService {
       print('❌ Cannot trigger alarm: AlarmService not initialized');
       return;
     }
-    
+
     print('🧪 Manual trigger for medication alarm: ${medicationData['name']}');
     _showMedicationAlarm(context, medicationId, medicationData);
   }
@@ -381,7 +405,9 @@ class AlarmService {
     print('  - Current time: ${DateTime.now()}');
     print('  - Triggered alarms count: ${_triggeredAlarms.length}');
     if (_triggeredAlarms.isNotEmpty) {
-      print('  - Triggered alarms: ${_triggeredAlarms.take(5).join(', ')}${_triggeredAlarms.length > 5 ? '...' : ''}');
+      print(
+        '  - Triggered alarms: ${_triggeredAlarms.take(5).join(', ')}${_triggeredAlarms.length > 5 ? '...' : ''}',
+      );
     }
   }
 }

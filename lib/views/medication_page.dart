@@ -1,11 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/services/alarm_service.dart';
 import 'package:pillpall/services/medication_service.dart';
 import 'package:pillpall/models/medication_model.dart'; // Add this import if MedicationModel is defined here
 import 'package:pillpall/utils/medication_alarm_helper.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pillpall/services/alarm_service.dart'; // Added import
-import 'package:pillpall/debug_helper.dart'; // Added import
+import 'package:pillpall/views/global_homebar.dart';
 
 class Medication_Widget extends StatefulWidget {
   const Medication_Widget({super.key});
@@ -246,12 +245,6 @@ class _Medication_WidgetState extends State<Medication_Widget> {
       'date': medication.date,
       'time': medication.time,
     });
-
-    return Card(
-      margin: EdgeInsets.only(bottom: 12),
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: isDueNow ? Colors.red[50] : null,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -338,10 +331,10 @@ class _Medication_WidgetState extends State<Medication_Widget> {
               ],
             ),
             SizedBox(height: 12),
-            if (dosage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
+<<<<<<< HEAD:lib/widget/medication_widget.dart
+=======
+
+            // Medication Details
                   children: [
                     Icon(Icons.science, color: Colors.blue, size: 18),
                     SizedBox(width: 4),
@@ -355,6 +348,11 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                   ],
                 ),
               ),
+<<<<<<< HEAD:lib/widget/medication_widget.dart
+=======
+
+            // Time Info
+>>>>>>> origin/dev1:lib/views/medication_page.dart
             if (time.isNotEmpty)
               Row(
                 children: [
@@ -369,7 +367,14 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                   ),
                 ],
               ),
+<<<<<<< HEAD:lib/widget/medication_widget.dart
             SizedBox(height: 16),
+=======
+
+            SizedBox(height: 16),
+
+            // Action Buttons Row
+>>>>>>> origin/dev1:lib/views/medication_page.dart
             Row(
               children: [
                 Expanded(
@@ -570,6 +575,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
 
                     try {
                       await _medicationService.addMedication(
+<<<<<<< HEAD:lib/widget/medication_widget.dart
                         MedicationModel(
                           name: nameController.text.trim(),
                           dosage: dosageController.text.trim(),
@@ -579,17 +585,16 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                           userId:
                               _getCurrentUserId(), // Add this line to provide userId
                         ),
+=======
+                        dosage: dosageController.text.trim(),
+                        date: selectedDate,
+                        time:
+                            '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+>>>>>>> origin/dev1:lib/views/medication_page.dart
                       );
 
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Medication added successfully!'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } catch (e) {
-                      print('Error adding medication: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(

@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pillpall/widget/add_edit_symptom.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/views/add_edit_symptom.dart';
+import 'package:pillpall/views/global_homebar.dart';
 
 import '../models/symptom_model.dart';
 import '../services/symptom_service.dart';

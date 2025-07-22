@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pillpall/auth_layout.dart';
-import 'package:pillpall/auth_service.dart';
-import 'package:pillpall/widget/global_homebar.dart';
+import 'package:pillpall/services/auth_layout.dart';
+import 'package:pillpall/services/auth_service.dart';
+import 'package:pillpall/views/global_homebar.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -284,11 +284,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
       // Step 5: Perform deletion
       await _performAccountDeletion(currentPassword);
-
     } catch (e) {
       // Close loading dialog if still open
       if (mounted) Navigator.of(context).pop();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -301,7 +300,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // Show detailed data preview dialog
-  Future<bool?> _showDataPreviewDialog(Map<String, int> stats, bool hasData) async {
+  Future<bool?> _showDataPreviewDialog(
+    Map<String, int> stats,
+    bool hasData,
+  ) async {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -363,23 +365,27 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                       SizedBox(height: 12),
-                      ...stats.entries.where((entry) => entry.value > 0).map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            children: [
-                              _getDataIcon(entry.key),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${entry.value} ${_getDataLabel(entry.key, entry.value)}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
+                      ...stats.entries
+                          .where((entry) => entry.value > 0)
+                          .map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4.0,
                               ),
-                            ],
+                              child: Row(
+                                children: [
+                                  _getDataIcon(entry.key),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${entry.value} ${_getDataLabel(entry.key, entry.value)}',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -411,10 +417,7 @@ class _ProfilePageState extends State<ProfilePage> {
               SizedBox(height: 16),
               Text(
                 'Your account and all associated data will be permanently removed from our servers.',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
               ),
             ],
           ),
@@ -444,7 +447,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context) {
         final passwordController = TextEditingController();
         bool obscurePassword = true;
-        
+
         return StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
             title: Row(
@@ -470,7 +473,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     prefixIcon: Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setDialogState(() {
@@ -488,7 +493,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(passwordController.text),
+                onPressed: () =>
+                    Navigator.of(context).pop(passwordController.text),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -570,7 +576,8 @@ class _ProfilePageState extends State<ProfilePage> {
       if (e.code == 'wrong-password') {
         errorMessage = 'Current password is incorrect!';
       } else if (e.code == 'requires-recent-login') {
-        errorMessage = 'Please log out and log back in before deleting your account!';
+        errorMessage =
+            'Please log out and log back in before deleting your account!';
       } else {
         errorMessage = 'Failed to delete account: ${e.message}';
       }

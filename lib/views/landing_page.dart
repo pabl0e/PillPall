@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:pillpall/auth_service.dart'; // Import your auth service
+import 'package:pillpall/services/auth_service.dart'; // Import your auth service
 import 'package:pillpall/services/task_service.dart';
 import 'package:pillpall/models/task_model.dart'; // Ensure TaskModel is imported
 import 'package:pillpall/widget/doctor_list.dart';
