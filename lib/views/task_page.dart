@@ -22,33 +22,6 @@ class _Task_WidgetState extends State<Task_Widget> {
     return _taskService.getTasksForDate(dateString);
   }
 
-  Future<void> _toggleTaskCompletion(String taskId, bool isCompleted) async {
-    try {
-      DocumentSnapshot doc = await FirebaseFirestore.instance
-          .collection('tasks')
-          .doc(taskId)
-          .get();
-
-      if (doc.exists) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<String> todos = List<String>.from(data['todos'] ?? []);
-        List<bool> todosChecked = List.filled(todos.length, isCompleted);
-
-        await FirebaseFirestore.instance
-            .collection('tasks')
-            .doc(taskId)
-            .update({
-          'todosChecked': todosChecked,
-          'isCompleted': isCompleted,
-          'completedAt': isCompleted ? FieldValue.serverTimestamp() : null,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-    } catch (e) {
-      print('Error toggling task completion: $e');
-    }
-  }
-
   double _calculateTaskCompletionPercentage(Map<String, dynamic> taskData) {
     final todos = taskData['todos'] as List?;
     final todosChecked = taskData['todosChecked'] as List?;
@@ -242,12 +215,18 @@ class _Task_WidgetState extends State<Task_Widget> {
                       final allTasks = snapshot.data!.docs;
                       final activeTasks = allTasks.where((task) {
                         final taskData = task.data() as Map<String, dynamic>;
-                        return taskData['isCompleted'] != true;
+                        // A task is active if it's not explicitly marked complete AND not at 100% progress
+                        final isExplicitlyCompleted = taskData['isCompleted'] == true;
+                        final completionPercentage = _calculateTaskCompletionPercentage(taskData);
+                        return !isExplicitlyCompleted && completionPercentage < 1.0;
                       }).toList();
                       
                       final completedTasks = allTasks.where((task) {
                         final taskData = task.data() as Map<String, dynamic>;
-                        return taskData['isCompleted'] == true;
+                        // A task is completed if it's explicitly marked complete OR at 100% progress
+                        final isExplicitlyCompleted = taskData['isCompleted'] == true;
+                        final completionPercentage = _calculateTaskCompletionPercentage(taskData);
+                        return isExplicitlyCompleted || completionPercentage >= 1.0;
                       }).toList();
 
                       return SingleChildScrollView(
@@ -256,31 +235,52 @@ class _Task_WidgetState extends State<Task_Widget> {
                           children: [
                             // Active Tasks Section
                             if (activeTasks.isNotEmpty) ...[
-                              Text(
-                                'Active Tasks (${activeTasks.length})',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple[700],
-                                ),
+                              Row(
+                                children: [
+                                  Icon(Icons.task_outlined, color: Colors.deepPurple[700], size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Active Tasks (${activeTasks.length})',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple[700],
+                                    ),
+                                  ),
+                                ],
                               ),
                               SizedBox(height: 8),
                               ...activeTasks.map((task) => _buildTaskCard(task)),
-                              SizedBox(height: 20),
+                              if (completedTasks.isNotEmpty) ...[
+                                SizedBox(height: 30),
+                                Divider(
+                                  thickness: 2,
+                                  color: Colors.grey[300],
+                                ),
+                                SizedBox(height: 20),
+                              ] else
+                                SizedBox(height: 20),
                             ],
                             
                             // Completed Tasks Section
                             if (completedTasks.isNotEmpty) ...[
-                              Text(
-                                'Completed Tasks (${completedTasks.length})',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green[700],
-                                ),
+                              Row(
+                                children: [
+                                  Icon(Icons.task_alt, color: Colors.green[700], size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Completed Tasks (${completedTasks.length})',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[700],
+                                    ),
+                                  ),
+                                ],
                               ),
                               SizedBox(height: 8),
                               ...completedTasks.map((task) => _buildCompletedTaskCard(task)),
+                              SizedBox(height: 20), // Extra space at bottom
                             ],
 
                             // Show message if no active tasks
@@ -830,17 +830,48 @@ class _Task_WidgetState extends State<Task_Widget> {
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         List<bool> todosChecked = List<bool>.from(data['todosChecked'] ?? []);
+        List<String> todos = List<String>.from(data['todos'] ?? []);
         
         if (todoIndex < todosChecked.length) {
           todosChecked[todoIndex] = isChecked;
           
+          // Check if all todos are now completed
+          bool allTodosCompleted = todosChecked.every((checked) => checked == true);
+          
+          // Update the task with new todo status and completion if needed
+          Map<String, dynamic> updateData = {
+            'todosChecked': todosChecked,
+            'updatedAt': FieldValue.serverTimestamp(),
+          };
+          
+          // If all todos are completed, mark the task as complete
+          if (allTodosCompleted && todos.isNotEmpty) {
+            updateData['isCompleted'] = true;
+            updateData['completedAt'] = FieldValue.serverTimestamp();
+            print('✅ Task automatically marked as complete: all todos finished');
+            
+            // Show success message to user
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('🎉 Task completed! All todo items finished.'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          }
+          // If not all todos are completed but task was previously marked complete, unmark it
+          else if (!allTodosCompleted && data['isCompleted'] == true) {
+            updateData['isCompleted'] = false;
+            updateData['completedAt'] = null;
+            print('🔄 Task unmarked as complete: not all todos finished');
+          }
+          
           await FirebaseFirestore.instance
               .collection('tasks')
               .doc(taskId)
-              .update({
-            'todosChecked': todosChecked,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+              .update(updateData);
         }
       }
     } catch (e) {
