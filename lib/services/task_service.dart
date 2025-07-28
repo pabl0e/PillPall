@@ -78,7 +78,7 @@ class TaskService {
         );
   }
 
-  Future<void> addTask(TaskModel task) async {
+  Future<void> addTaskModel(TaskModel task) async {
     if (!_isSignedIn) {
       throw Exception('User must be signed in to add tasks');
     }
@@ -328,5 +328,4 @@ class TaskService {
       rethrow;
     }
   }
-}
 }
