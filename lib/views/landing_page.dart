@@ -823,35 +823,28 @@ class _SymptomCard extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // ✅ ENHANCED: Symptom name with severity indicator
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Severity dot indicator
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: severityColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          label,
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  // ✅ ENHANCED: Severity indicator positioned above symptom name
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: severityColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  SizedBox(height: 6),
+                  
+                  // ✅ ENHANCED: Symptom name 
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
 
                   SizedBox(height: 8),
