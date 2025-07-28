@@ -534,11 +534,28 @@ class AlarmService {
       print('⏰ Scheduling snoozed alarm for $minutes minutes');
 
       Future.delayed(Duration(minutes: minutes), () {
-        if (_isInitialized && context.mounted) {
+        // Use the stored context from the alarm service instead of the passed context
+        final currentContext = _context;
+        if (_isInitialized && currentContext != null && currentContext.mounted) {
           print('🔔 Showing snoozed alarm for: ${medicationData['name']}');
           // Remove from triggered alarms so it can trigger again
+          // Create the specific alarm key that was used when the alarm was first triggered
+          final currentDate = DateTime.now().toIso8601String().split('T')[0];
+          final specificAlarmKey = '${medicationId}_${currentDate}_${medicationData['time']}';
+          
+          print('🔍 Removing alarm key: $specificAlarmKey');
+          _triggeredAlarms.remove(specificAlarmKey);
+          
+          // Also remove any other variations to be safe
           _triggeredAlarms.removeWhere((key) => key.startsWith(medicationId));
-          _showMedicationAlarm(context, medicationId, medicationData);
+          
+          print('🔄 Remaining triggered alarms: ${_triggeredAlarms.length}');
+          _showMedicationAlarm(currentContext, medicationId, medicationData);
+        } else {
+          print('❌ Cannot show snoozed alarm: Service not initialized or context unavailable');
+          print('   - _isInitialized: $_isInitialized');
+          print('   - currentContext != null: ${currentContext != null}');
+          print('   - currentContext.mounted: ${currentContext?.mounted}');
         }
       });
 
