@@ -295,6 +295,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                         'dosage': medication.dosage,
                         'date': medication.date,
                         'time': medication.time,
+                        'userId': medication.userId,
                       }),
                   itemBuilder: (context) => [
                     PopupMenuItem(
@@ -367,6 +368,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
                         'dosage': medication.dosage,
                         'date': medication.date,
                         'time': medication.time,
+                        'userId': medication.userId,
                       }),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,

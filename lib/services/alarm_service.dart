@@ -493,6 +493,15 @@ class AlarmService {
     int minutes,
   ) async {
     try {
+      // Get the current user ID as fallback
+      final currentUserId = authService.value.currentUser?.uid;
+      final userId = medicationData['userId'] ?? currentUserId;
+      
+      if (userId == null) {
+        print('❌ Cannot log medication snooze: No user ID available');
+        return;
+      }
+
       await FirebaseFirestore.instance.collection('medication_logs').add({
         'medicationId': medicationId,
         'medicationName': medicationData['name'],
@@ -501,7 +510,7 @@ class AlarmService {
         'snoozedAt': FieldValue.serverTimestamp(),
         'snoozeMinutes': minutes,
         'status': 'snoozed',
-        'userId': medicationData['userId'],
+        'userId': userId,
       });
 
       print('⏰ Scheduling snoozed alarm for $minutes minutes');
