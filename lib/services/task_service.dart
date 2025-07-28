@@ -60,7 +60,9 @@ class TaskService {
       print('Error getting tasks for date: $e');
       rethrow;
     }
-  Stream<List<TaskModel>> getTasksForDate(String dateString) {
+  }
+
+  Stream<List<TaskModel>> getTasksForDateModel(String dateString) {
     if (!_isSignedIn) {
       throw Exception('User must be signed in to view tasks');
     }
@@ -76,7 +78,7 @@ class TaskService {
         );
   }
 
-  Future<void> addTask(TaskModel task) async {
+  Future<void> addTaskModel(TaskModel task) async {
     if (!_isSignedIn) {
       throw Exception('User must be signed in to add tasks');
     }
@@ -326,5 +328,4 @@ class TaskService {
       rethrow;
     }
   }
-}
 }
