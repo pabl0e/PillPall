@@ -478,6 +478,15 @@ class AlarmService {
     Map<String, dynamic> medicationData,
   ) async {
     try {
+      // Get the current user ID as fallback
+      final currentUserId = authService.value.currentUser?.uid;
+      final userId = medicationData['userId'] ?? currentUserId;
+      
+      if (userId == null) {
+        print('❌ Cannot log medication skipped: No user ID available');
+        return;
+      }
+
       await FirebaseFirestore.instance.collection('medication_logs').add({
         'medicationId': medicationId,
         'medicationName': medicationData['name'],
@@ -485,7 +494,7 @@ class AlarmService {
         'scheduledTime': medicationData['time'],
         'skippedAt': FieldValue.serverTimestamp(),
         'status': 'skipped',
-        'userId': medicationData['userId'],
+        'userId': userId,
       });
 
       print('⏭️ Medication marked as skipped and logged');
