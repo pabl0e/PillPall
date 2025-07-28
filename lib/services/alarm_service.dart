@@ -688,22 +688,23 @@ class AlarmService {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                _snoozeTaskAlarm(context, taskId, taskData, 5); // 5 minutes snooze
               },
               child: Text(
-                'Snooze',
+                'Snooze 5min',
                 style: TextStyle(color: Colors.grey[600]),
               ),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // Optionally navigate to task page
+                _logTaskCompleted(taskId, taskData);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
               ),
-              child: Text('View Task'),
+              child: Text('Mark Done'),
             ),
           ],
         );
@@ -726,6 +727,118 @@ class AlarmService {
       print('Error formatting task time: $e');
     }
     return time;
+  }
+
+  // Snooze task alarm for specified minutes
+  void _snoozeTaskAlarm(
+    BuildContext context,
+    String taskId,
+    Map<String, dynamic> taskData,
+    int minutes,
+  ) async {
+    try {
+      // Get the current user ID as fallback
+      final currentUserId = authService.value.currentUser?.uid;
+      final userId = taskData['userId'] ?? currentUserId;
+      
+      if (userId == null) {
+        print('❌ Cannot log task snooze: No user ID available');
+        return;
+      }
+
+      await FirebaseFirestore.instance.collection('task_logs').add({
+        'taskId': taskId,
+        'taskTitle': taskData['title'],
+        'snoozedAt': FieldValue.serverTimestamp(),
+        'snoozeMinutes': minutes,
+        'status': 'snoozed',
+        'userId': userId,
+      });
+
+      print('⏰ Task snoozed for $minutes minutes: ${taskData['title']}');
+
+      // Show snackbar confirmation
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Task snoozed for $minutes minutes'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Schedule the snoozed alarm
+      _scheduleTaskSnooze(context, taskId, taskData, minutes);
+    } catch (e) {
+      print('❌ Error logging task snooze: $e');
+    }
+  }
+
+  // Schedule snoozed task alarm
+  void _scheduleTaskSnooze(
+    BuildContext context,
+    String taskId,
+    Map<String, dynamic> taskData,
+    int minutes,
+  ) async {
+    final currentContext = _context;
+    
+    print('⏰ Scheduling task snooze for $minutes minutes...');
+    
+    Future.delayed(Duration(minutes: minutes), () async {
+      print('🔔 Task snooze period ended, showing alarm again...');
+      
+      if (_isInitialized && currentContext != null && currentContext.mounted) {
+        print('🔔 Showing snoozed task alarm for: ${taskData['title']}');
+        // Remove from triggered alarms so it can trigger again
+        final currentDate = DateTime.now().toIso8601String().split('T')[0];
+        final specificAlarmKey = '${taskId}_${currentDate}_${taskData['startTime']}';
+        
+        print('🔍 Removing task alarm key: $specificAlarmKey');
+        _triggeredAlarms.remove(specificAlarmKey);
+        
+        // Also remove any other variations to be safe
+        _triggeredAlarms.removeWhere((key) => key.startsWith(taskId));
+        
+        print('🔄 Remaining triggered alarms: ${_triggeredAlarms.length}');
+        _showTaskAlarm(currentContext, taskId, taskData);
+      } else {
+        print('❌ Cannot show snoozed task alarm: Context not available or not mounted');
+        print('  - Initialized: $_isInitialized');
+        print('  - Context: $currentContext');
+        print('  - Context mounted: ${currentContext?.mounted}');
+      }
+    });
+  }
+
+  // Log task as completed
+  Future<void> _logTaskCompleted(
+    String taskId,
+    Map<String, dynamic> taskData,
+  ) async {
+    try {
+      // Get the current user ID as fallback
+      final currentUserId = authService.value.currentUser?.uid;
+      final userId = taskData['userId'] ?? currentUserId;
+      
+      if (userId == null) {
+        print('❌ Cannot log task completion: No user ID available');
+        return;
+      }
+
+      await FirebaseFirestore.instance.collection('task_logs').add({
+        'taskId': taskId,
+        'taskTitle': taskData['title'],
+        'completedAt': FieldValue.serverTimestamp(),
+        'status': 'completed',
+        'userId': userId,
+      });
+
+      print('✅ Task marked as completed and logged');
+    } catch (e) {
+      print('❌ Error logging task completion: $e');
+    }
   }
 
   // Debug method to check service status
