@@ -263,7 +263,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 25),
                 // My daily insights Section
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -490,7 +490,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 25),
                 // Your Doctor's Contact Details - FIXED with userId filter
                 Text(
                   "Your Doctor's Contact Details",
