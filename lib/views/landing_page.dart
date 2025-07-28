@@ -6,9 +6,6 @@ import 'package:pillpall/views/doctor_list.dart';
 import 'package:pillpall/views/global_homebar.dart';
 import 'package:pillpall/views/symptom_page.dart';
 import 'package:pillpall/views/task_page.dart';
-import 'package:pillpall/views/medication_page.dart';
-import 'package:pillpall/views/alarm_test_page.dart';
-import 'package:pillpall/views/profile_page.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -760,7 +757,7 @@ class _SquareTaskCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 120,
+          height: 160,
           margin: EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -773,68 +770,74 @@ class _SquareTaskCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icon (if provided)
-                  if (icon != null) ...[
-                    Icon(
-                      icon,
-                      color: Colors.deepPurple,
-                      size: 28,
-                    ),
-                    SizedBox(height: 6),
-                  ],
-                  
-                  // Label text
-                  Text(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Icon (if provided)
+                if (icon != null) ...[
+                  Icon(
+                    icon,
+                    color: Colors.deepPurple,
+                    size: 24,
+                  ),
+                  SizedBox(height: 4),
+                ],
+                
+                // Label text
+                Flexible(
+                  child: Text(
                     label,
                     style: TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: TextOverflow.visible,
+                    softWrap: true,
                   ),
-                  
-                  // Date field (specialty for doctors)
-                  if (date != null && date!.isNotEmpty) ...[
-                    SizedBox(height: 4),
-                    Text(
+                ),
+                
+                // Date field (specialty for doctors)
+                if (date != null && date!.isNotEmpty) ...[
+                  SizedBox(height: 2),
+                  Flexible(
+                    child: Text(
                       date!,
                       style: TextStyle(
                         color: Colors.deepPurple,
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.w500,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.visible,
+                      softWrap: true,
                     ),
-                  ],
-                  
-                  // Time field (phone for doctors) - Always show for debugging
-                  if (time != null && time!.isNotEmpty) ...[
-                    SizedBox(height: 3),
-                    Text(
+                  ),
+                ],
+                
+                // Time field (phone for doctors)
+                if (time != null && time!.isNotEmpty) ...[
+                  SizedBox(height: 2),
+                  Flexible(
+                    child: Text(
                       time!,
                       style: TextStyle(
                         color: Colors.teal,
-                        fontSize: 11,
+                        fontSize: 9,
                         fontWeight: FontWeight.w400,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ],
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
