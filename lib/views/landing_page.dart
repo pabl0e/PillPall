@@ -115,11 +115,13 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    // Add Tasks Card
-                    _SquareTaskCard(
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      // Add Tasks Card
+                      _SquareTaskCard(
                       label: "Add Tasks",
                       icon: Icons.add,
                       onTap: () {
@@ -260,6 +262,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
+                ),
                 SizedBox(height: 20),
                 // My daily insights Section
                 Row(
@@ -293,9 +296,11 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: 20),
                 // Symptoms row - ENHANCED with time and severity
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
                     _SquareTaskCard(
                       label: "Log your symptoms",
                       icon: Icons.add,
@@ -484,6 +489,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
+                ),
                 SizedBox(height: 20),
                 // Your Doctor's Contact Details - FIXED with userId filter
                 Text(
@@ -491,9 +497,11 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
                     _SquareTaskCard(
                       label: "Add Doctor",
                       icon: Icons.add,
@@ -793,8 +801,8 @@ class _SymptomCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 120,
-          margin: EdgeInsets.only(bottom: 8),
+          height: 140,
+          margin: EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -942,8 +950,8 @@ class _SquareTaskCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 160,
-          margin: EdgeInsets.only(bottom: 8),
+          height: 140,
+          margin: EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
