@@ -447,6 +447,15 @@ class AlarmService {
     Map<String, dynamic> medicationData,
   ) async {
     try {
+      // Get the current user ID as fallback
+      final currentUserId = authService.value.currentUser?.uid;
+      final userId = medicationData['userId'] ?? currentUserId;
+      
+      if (userId == null) {
+        print('❌ Cannot log medication taken: No user ID available');
+        return;
+      }
+
       await FirebaseFirestore.instance.collection('medication_logs').add({
         'medicationId': medicationId,
         'medicationName': medicationData['name'],
@@ -454,7 +463,7 @@ class AlarmService {
         'scheduledTime': medicationData['time'],
         'takenAt': FieldValue.serverTimestamp(),
         'status': 'taken',
-        'userId': medicationData['userId'],
+        'userId': userId,
       });
 
       print('✅ Medication marked as taken and logged');
@@ -514,10 +523,6 @@ class AlarmService {
       });
 
       print('⏰ Scheduling snoozed alarm for $minutes minutes');
-
-      // ✅ ENHANCED: Create unique key for snoozed alarm
-      final snoozeKey =
-          '${medicationId}_snooze_${DateTime.now().millisecondsSinceEpoch}';
 
       Future.delayed(Duration(minutes: minutes), () {
         if (_isInitialized && context.mounted) {
