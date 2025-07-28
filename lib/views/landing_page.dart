@@ -809,8 +809,8 @@ class _SymptomCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 6,
                 offset: Offset(0, 2),
               ),
             ],
@@ -958,8 +958,8 @@ class _SquareTaskCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 6,
                 offset: Offset(0, 2),
               ),
             ],
