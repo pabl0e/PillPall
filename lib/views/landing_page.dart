@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pillpall/services/auth_service.dart'; // Import your auth service
-import 'package:pillpall/services/task_service.dart';
 import 'package:pillpall/views/doctor_list.dart';
 import 'package:pillpall/views/global_homebar.dart';
 import 'package:pillpall/views/symptom_page.dart';
@@ -15,7 +14,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   DateTime _selectedDate = DateTime.now();
-  final TaskService _taskService = TaskService();
 
   // Helper method to get current user ID
   String? get _currentUserId => authService.value.currentUser?.uid;
@@ -87,9 +85,34 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: 20),
                 // Scheduled Tasks Section
-                Text(
-                  "Scheduled Tasks",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          "Scheduled Tasks",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        if (_selectedDate.toIso8601String().split('T')[0] != DateTime.now().toIso8601String().split('T')[0]) ...[
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: Colors.deepPurple,
+                          ),
+                        ],
+                      ],
+                    ),
+                    Text(
+                      _formatSelectedDate(_selectedDate),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.deepPurple,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 10),
                 Row(
@@ -109,11 +132,16 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                     SizedBox(width: 16),
-                    // Latest Tasks Cards - FIXED
+                    // Tasks for Selected Date
                     Expanded(
                       flex: 2,
                       child: StreamBuilder<QuerySnapshot>(
-                        stream: _taskService.getTasksForDate(DateTime.now().toIso8601String().split('T')[0]),
+                        key: ValueKey('tasks_${_selectedDate.toIso8601String().split('T')[0]}'), // Force rebuild on date change
+                        stream: FirebaseFirestore.instance
+                            .collection('tasks')
+                            .where('userId', isEqualTo: _currentUserId)
+                            .orderBy('createdAt', descending: true)
+                            .snapshots(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -127,6 +155,7 @@ class _HomePageState extends State<HomePage> {
                           }
 
                           if (snapshot.hasError) {
+                            print('Tasks stream error: ${snapshot.error}');
                             return Row(
                               children: [
                                 _SquareTaskCard(label: "Error loading tasks"),
@@ -136,21 +165,75 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
+                          // Check if we have data before filtering
                           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
-                                _SquareTaskCard(label: "No tasks yet"),
+                                _SquareTaskCard(label: "No tasks for selected date"),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
 
-                          final tasks = snapshot.data!.docs.take(2).toList();
+                          // Filter tasks for the selected date
+                          final selectedDateString = _selectedDate.toIso8601String().split('T')[0];
+                          print('🗓️ Filtering tasks for selected date: $selectedDateString');
+                          print('🗓️ Total tasks in database: ${snapshot.data!.docs.length}');
+                          
+                          final filteredTasks = snapshot.data!.docs.where((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            
+                            // Debug: print all available fields for first few documents
+                            if (snapshot.data!.docs.indexOf(doc) < 3) {
+                              print('🗓️ Task document fields: ${data.keys.toList()}');
+                              print('🗓️ Task data: $data');
+                            }
+                            
+                            // Check different possible date fields
+                            String? taskDate;
+                            
+                            // Try to get date from different fields
+                            if (data['startDateOnly'] != null) {
+                              taskDate = data['startDateOnly'].toString();
+                            } else if (data['startDate'] != null) {
+                              taskDate = data['startDate'].toString().split('T')[0];
+                            } else if (data['date'] != null) {
+                              taskDate = data['date'].toString().split('T')[0];
+                            } else if (data['createdAt'] != null) {
+                              // Extract date from createdAt timestamp
+                              try {
+                                if (data['createdAt'] is Timestamp) {
+                                  taskDate = (data['createdAt'] as Timestamp).toDate().toIso8601String().split('T')[0];
+                                } else if (data['createdAt'] is String) {
+                                  taskDate = DateTime.tryParse(data['createdAt'])?.toIso8601String().split('T')[0];
+                                }
+                              } catch (e) {
+                                print('Error parsing date from createdAt: $e');
+                              }
+                            }
+                            
+                            print('🗓️ Task date: $taskDate, Selected: $selectedDateString, Match: ${taskDate == selectedDateString}');
+                            
+                            // Return true if dates match
+                            return taskDate == selectedDateString;
+                          }).take(2).toList();
+
+                          if (filteredTasks.isEmpty) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(label: "No tasks for selected date"),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(),
+                              ],
+                            );
+                          }
+
+                          print('🗓️ Found ${filteredTasks.length} filtered tasks for date: $selectedDateString');
                           return Row(
                             children: List.generate(2, (i) {
-                              if (i < tasks.length) {
-                                final data = tasks[i].data() as Map<String, dynamic>;
+                              if (i < filteredTasks.length) {
+                                final data = filteredTasks[i].data() as Map<String, dynamic>;
                                 return Expanded(
                                   child: _SquareTaskCard(
                                     label: data['title'] ?? 'Untitled Task',
@@ -179,9 +262,34 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: 20),
                 // My daily insights Section
-                Text(
-                  "My daily insights",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          "My daily insights",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        if (_selectedDate.toIso8601String().split('T')[0] != DateTime.now().toIso8601String().split('T')[0]) ...[
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: Colors.deepPurple,
+                          ),
+                        ],
+                      ],
+                    ),
+                    Text(
+                      _formatSelectedDate(_selectedDate),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.deepPurple,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 20),
                 // Symptoms row - ENHANCED with time and severity
@@ -201,19 +309,16 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                     SizedBox(width: 16),
-                    // Latest Symptoms Cards - FIXED time display
+                    // Symptoms for Selected Date
                     Expanded(
                       flex: 2,
                       child: StreamBuilder<QuerySnapshot>(
+                        key: ValueKey('symptoms_${_selectedDate.toIso8601String().split('T')[0]}'), // Force rebuild on date change
                         stream: _currentUserId != null
                             ? FirebaseFirestore.instance
                                   .collection('symptoms')
-                                  .where(
-                                    'userId',
-                                    isEqualTo: _currentUserId,
-                                  ) // Filter by user
+                                  .where('userId', isEqualTo: _currentUserId)
                                   .orderBy('createdAt', descending: true)
-                                  .limit(2) // Limit to 2 for efficiency
                                   .snapshots()
                             : Stream.empty(),
                         builder: (context, snapshot) {
@@ -241,23 +346,71 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
-                          if (!snapshot.hasData ||
-                              snapshot.data!.docs.isEmpty) {
+                          // Check if we have data before filtering
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                             return Row(
                               children: [
-                                _SquareTaskCard(label: "No symptoms logged"),
+                                _SquareTaskCard(label: "No symptoms for selected date"),
                                 SizedBox(width: 16),
                                 _SquareTaskCard(),
                               ],
                             );
                           }
 
-                          final symptoms = snapshot.data!.docs.take(2).toList();
+                          // Filter symptoms for the selected date
+                          final selectedDateString = _selectedDate.toIso8601String().split('T')[0];
+                          print('🗓️ Filtering symptoms for selected date: $selectedDateString');
+                          print('🗓️ Total symptoms in database: ${snapshot.data!.docs.length}');
+                          
+                          final filteredSymptoms = snapshot.data!.docs.where((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            
+                            // Debug: print all available fields for first few documents
+                            if (snapshot.data!.docs.indexOf(doc) < 3) {
+                              print('🗓️ Symptom document fields: ${data.keys.toList()}');
+                              print('🗓️ Symptom data: $data');
+                            }
+                            
+                            // Check different possible date fields
+                            String? symptomDate;
+                            
+                            // Try to get date from different fields
+                            if (data['date'] != null) {
+                              symptomDate = data['date'].toString().split('T')[0];
+                            } else if (data['createdAt'] != null) {
+                              // Extract date from createdAt timestamp
+                              try {
+                                if (data['createdAt'] is Timestamp) {
+                                  symptomDate = (data['createdAt'] as Timestamp).toDate().toIso8601String().split('T')[0];
+                                } else if (data['createdAt'] is String) {
+                                  symptomDate = DateTime.tryParse(data['createdAt'])?.toIso8601String().split('T')[0];
+                                }
+                              } catch (e) {
+                                print('Error parsing date from createdAt: $e');
+                              }
+                            }
+                            
+                            print('🗓️ Symptom date: $symptomDate, Selected: $selectedDateString, Match: ${symptomDate == selectedDateString}');
+                            
+                            // Return true if dates match
+                            return symptomDate == selectedDateString;
+                          }).take(2).toList();
+
+                          if (filteredSymptoms.isEmpty) {
+                            return Row(
+                              children: [
+                                _SquareTaskCard(label: "No symptoms for selected date"),
+                                SizedBox(width: 16),
+                                _SquareTaskCard(),
+                              ],
+                            );
+                          }
+
                           return Row(
                             children: List.generate(2, (i) {
-                              if (i < symptoms.length) {
+                              if (i < filteredSymptoms.length) {
                                 final data =
-                                    symptoms[i].data() as Map<String, dynamic>;
+                                    filteredSymptoms[i].data() as Map<String, dynamic>;
 
                                 // ✅ ENHANCED: Get symptom details with debugging
                                 final symptomText =
@@ -495,6 +648,38 @@ class _HomePageState extends State<HomePage> {
       'December',
     ];
     return "${months[date.month]} ${date.day}, ${date.year}";
+  }
+
+  String _formatSelectedDate(DateTime date) {
+    const months = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDay = DateTime(date.year, date.month, date.day);
+    
+    if (selectedDay == today) {
+      return 'Today';
+    } else if (selectedDay == today.add(Duration(days: 1))) {
+      return 'Tomorrow';
+    } else if (selectedDay == today.subtract(Duration(days: 1))) {
+      return 'Yesterday';
+    } else {
+      return "${months[date.month]} ${date.day}";
+    }
   }
 
   String _formatTimeAMPM(String? time) {
