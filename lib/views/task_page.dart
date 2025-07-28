@@ -15,7 +15,6 @@ class Task_Widget extends StatefulWidget {
 class _Task_WidgetState extends State<Task_Widget> {
   DateTime _selectedDate = DateTime.now();
   final TaskService _taskService = TaskService();
-  bool _isLoading = false;
 
   // Method to get tasks for selected date
   Stream<QuerySnapshot> _getTasksForDate(DateTime date) {
@@ -337,20 +336,9 @@ class _Task_WidgetState extends State<Task_Widget> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 32.0),
         child: FloatingActionButton(
-          onPressed: _isLoading
-              ? null
-              : () => _showAddTaskDialog(_selectedDate),
-          child: _isLoading
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Icon(Icons.add, color: Colors.white),
-          backgroundColor: _isLoading ? Colors.grey : Colors.deepPurple,
+          onPressed: () => _showAddTaskDialog(_selectedDate),
+          child: Icon(Icons.add, color: Colors.white),
+          backgroundColor: Colors.deepPurple,
           tooltip:
               'Add Task for ${_monthName(_selectedDate.month)} ${_selectedDate.day}',
         ),
@@ -656,7 +644,6 @@ class _Task_WidgetState extends State<Task_Widget> {
   Widget _buildCompletedTaskCard(DocumentSnapshot task) {
     final taskId = task.id;
     final taskData = task.data() as Map<String, dynamic>;
-    final completionPercentage = _calculateTaskCompletionPercentage(taskData);
 
     return Card(
       margin: EdgeInsets.only(bottom: 12),
@@ -971,275 +958,14 @@ class _Task_WidgetState extends State<Task_Widget> {
   }
 
   Future<void> _showAddTaskDialog(DateTime preselectedDate) async {
-    TextEditingController titleController = TextEditingController();
-    DateTime startDate = preselectedDate;
-    DateTime endDate = preselectedDate;
-    TimeOfDay startTime = TimeOfDay.now();
-    TimeOfDay endTime = TimeOfDay(
-      hour: TimeOfDay.now().hour + 1,
-      minute: TimeOfDay.now().minute,
-    );
-    List<TextEditingController> todoControllers = [TextEditingController()];
-
+    // Create a separate dialog widget to avoid StatefulBuilder issues
     await showDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                'Add Task for ${_monthName(startDate.month)} ${startDate.day}',
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: titleController,
-                      decoration: InputDecoration(
-                        labelText: 'Task Title',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
-                    // Start Date
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            "Start Date: ${startDate.toLocal().toString().split(' ')[0]}",
-                          ),
-                        ),
-                        TextButton(
-                          child: Text('Change'),
-                          onPressed: () async {
-                            DateTime? picked = await showDatePicker(
-                              context: context,
-                              initialDate: startDate,
-                              firstDate: DateTime(DateTime.now().year - 1),
-                              lastDate: DateTime(DateTime.now().year + 2),
-                            );
-                            if (picked != null) {
-                              setDialogState(() {
-                                startDate = picked;
-                                if (endDate.isBefore(startDate)) {
-                                  endDate = startDate;
-                                }
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-
-                    // End Date
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            "End Date: ${endDate.toLocal().toString().split(' ')[0]}",
-                          ),
-                        ),
-                        TextButton(
-                          child: Text('Change'),
-                          onPressed: () async {
-                            DateTime? picked = await showDatePicker(
-                              context: context,
-                              initialDate: endDate,
-                              firstDate: startDate,
-                              lastDate: DateTime(DateTime.now().year + 2),
-                            );
-                            if (picked != null) {
-                              setDialogState(() {
-                                endDate = picked;
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-
-                    // Start Time
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            "Start Time: ${startTime.format(context)}",
-                          ),
-                        ),
-                        TextButton(
-                          child: Text('Pick'),
-                          onPressed: () async {
-                            TimeOfDay? picked = await showTimePicker(
-                              context: context,
-                              initialTime: startTime,
-                            );
-                            if (picked != null) {
-                              setDialogState(() {
-                                startTime = picked;
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-
-                    // End Time
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text("End Time: ${endTime.format(context)}"),
-                        ),
-                        TextButton(
-                          child: Text('Pick'),
-                          onPressed: () async {
-                            TimeOfDay? picked = await showTimePicker(
-                              context: context,
-                              initialTime: endTime,
-                            );
-                            if (picked != null) {
-                              setDialogState(() {
-                                endTime = picked;
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 16),
-
-                    // Todo Items
-                    Text(
-                      'Todo Items:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-
-                    ...List.generate(todoControllers.length, (index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: todoControllers[index],
-                                decoration: InputDecoration(
-                                  labelText: 'Todo ${index + 1}',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            if (todoControllers.length > 1)
-                              IconButton(
-                                icon: Icon(
-                                  Icons.remove_circle,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () {
-                                  setDialogState(() {
-                                    todoControllers.removeAt(index);
-                                  });
-                                },
-                              ),
-                          ],
-                        ),
-                      );
-                    }),
-
-                    TextButton.icon(
-                      onPressed: () {
-                        setDialogState(() {
-                          todoControllers.add(TextEditingController());
-                        });
-                      },
-                      icon: Icon(Icons.add),
-                      label: Text('Add Todo Item'),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  child: Text('Cancel'),
-                  onPressed: () {
-                    for (var controller in todoControllers) {
-                      controller.dispose();
-                    }
-                    Navigator.of(context).pop();
-                  },
-                ),
-                ElevatedButton(
-                  child: Text('Add Task'),
-                  onPressed: () async {
-                    if (titleController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Please enter task title')),
-                      );
-                      return;
-                    }
-
-                    setState(() {
-                      _isLoading = true;
-                    });
-
-                    try {
-                      List<String> todos = todoControllers
-                          .map((controller) => controller.text.trim())
-                          .where((text) => text.isNotEmpty)
-                          .toList();
-
-                      // Format time consistently 
-                      String formatTimeForDatabase(TimeOfDay time) {
-                        final hour = time.hour.toString().padLeft(2, '0');
-                        final minute = time.minute.toString().padLeft(2, '0');
-                        return '$hour:$minute';
-                      }
-
-                      await _taskService.addTask(
-                        title: titleController.text.trim(),
-                        startDate: startDate,
-                        endDate: endDate,
-                        startTime: formatTimeForDatabase(startTime),
-                        endTime: formatTimeForDatabase(endTime),
-                        todos: todos,
-                        todosChecked: List.filled(todos.length, false),
-                      );
-
-                      for (var controller in todoControllers) {
-                        controller.dispose();
-                      }
-
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Task added successfully!'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } catch (e) {
-                      print('Error adding task: $e');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Failed to add task. Please try again.',
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    } finally {
-                      setState(() {
-                        _isLoading = false;
-                      });
-                    }
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (context) => _AddTaskDialog(
+        preselectedDate: preselectedDate,
+        taskService: _taskService,
+        monthName: _monthName,
+      ),
     );
   }
 
@@ -1662,5 +1388,296 @@ class _Task_WidgetState extends State<Task_Widget> {
     } catch (e) {
       return 'Invalid time';
     }
+  }
+}
+
+// Separate dialog widget to avoid StatefulBuilder dependency issues
+class _AddTaskDialog extends StatefulWidget {
+  final DateTime preselectedDate;
+  final TaskService taskService;
+  final String Function(int) monthName;
+
+  const _AddTaskDialog({
+    required this.preselectedDate,
+    required this.taskService,
+    required this.monthName,
+  });
+
+  @override
+  State<_AddTaskDialog> createState() => _AddTaskDialogState();
+}
+
+class _AddTaskDialogState extends State<_AddTaskDialog> {
+  late TextEditingController titleController;
+  late DateTime startDate;
+  late DateTime endDate;
+  late TimeOfDay startTime;
+  late TimeOfDay endTime;
+  late List<TextEditingController> todoControllers;
+
+  @override
+  void initState() {
+    super.initState();
+    titleController = TextEditingController();
+    startDate = widget.preselectedDate;
+    endDate = widget.preselectedDate;
+    startTime = TimeOfDay.now();
+    endTime = TimeOfDay(
+      hour: TimeOfDay.now().hour + 1,
+      minute: TimeOfDay.now().minute,
+    );
+    todoControllers = [TextEditingController()];
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    for (var controller in todoControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _addTodoField() {
+    setState(() {
+      todoControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeTodoField(int index) {
+    if (todoControllers.length > 1) {
+      setState(() {
+        todoControllers[index].dispose();
+        todoControllers.removeAt(index);
+      });
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isStartDate ? startDate : endDate,
+      firstDate: isStartDate 
+          ? DateTime(DateTime.now().year - 1)
+          : startDate,
+      lastDate: DateTime(DateTime.now().year + 2),
+    );
+    
+    if (picked != null) {
+      setState(() {
+        if (isStartDate) {
+          startDate = picked;
+          if (endDate.isBefore(startDate)) {
+            endDate = startDate;
+          }
+        } else {
+          endDate = picked;
+        }
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: isStartTime ? startTime : endTime,
+    );
+    
+    if (picked != null) {
+      setState(() {
+        if (isStartTime) {
+          startTime = picked;
+        } else {
+          endTime = picked;
+        }
+      });
+    }
+  }
+
+  Future<void> _addTask() async {
+    if (titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter task title')),
+      );
+      return;
+    }
+
+    try {
+      List<String> todos = todoControllers
+          .map((controller) => controller.text.trim())
+          .where((text) => text.isNotEmpty)
+          .toList();
+
+      // Format time consistently 
+      String formatTimeForDatabase(TimeOfDay time) {
+        final hour = time.hour.toString().padLeft(2, '0');
+        final minute = time.minute.toString().padLeft(2, '0');
+        return '$hour:$minute';
+      }
+
+      await widget.taskService.addTask(
+        title: titleController.text.trim(),
+        startDate: startDate,
+        endDate: endDate,
+        startTime: formatTimeForDatabase(startTime),
+        endTime: formatTimeForDatabase(endTime),
+        todos: todos,
+        todosChecked: List.filled(todos.length, false),
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Task added successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error adding task: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add task. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        'Add Task for ${widget.monthName(startDate.month)} ${startDate.day}',
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: 'Task Title',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
+
+            // Start Date
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "Start Date: ${startDate.toLocal().toString().split(' ')[0]}",
+                  ),
+                ),
+                TextButton(
+                  child: Text('Change'),
+                  onPressed: () => _selectDate(context, true),
+                ),
+              ],
+            ),
+
+            // End Date
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "End Date: ${endDate.toLocal().toString().split(' ')[0]}",
+                  ),
+                ),
+                TextButton(
+                  child: Text('Change'),
+                  onPressed: () => _selectDate(context, false),
+                ),
+              ],
+            ),
+
+            // Start Time
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "Start Time: ${startTime.format(context)}",
+                  ),
+                ),
+                TextButton(
+                  child: Text('Pick'),
+                  onPressed: () => _selectTime(context, true),
+                ),
+              ],
+            ),
+
+            // End Time
+            Row(
+              children: [
+                Expanded(
+                  child: Text("End Time: ${endTime.format(context)}"),
+                ),
+                TextButton(
+                  child: Text('Pick'),
+                  onPressed: () => _selectTime(context, false),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 16),
+
+            // Todo Items
+            Text(
+              'Todo Items:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+
+            ...List.generate(todoControllers.length, (index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: todoControllers[index],
+                        decoration: InputDecoration(
+                          labelText: 'Todo ${index + 1}',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    if (todoControllers.length > 1)
+                      IconButton(
+                        icon: Icon(
+                          Icons.remove_circle,
+                          color: Colors.red,
+                        ),
+                        onPressed: () => _removeTodoField(index),
+                      ),
+                  ],
+                ),
+              );
+            }),
+
+            TextButton.icon(
+              onPressed: _addTodoField,
+              icon: Icon(Icons.add),
+              label: Text('Add Todo Item'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: Text('Cancel'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        ElevatedButton(
+          child: Text('Add Task'),
+          onPressed: _addTask,
+        ),
+      ],
+    );
   }
 }

@@ -355,11 +355,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         children: [
                           Icon(Icons.delete_forever, color: Colors.red),
                           SizedBox(width: 8),
-                          Text(
-                            'The following data will be permanently deleted:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red[800],
+                          Expanded(
+                            child: Text(
+                              'The following data will be permanently deleted:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[800],
+                              ),
                             ),
                           ),
                         ],
