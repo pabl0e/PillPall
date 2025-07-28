@@ -28,6 +28,83 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     return _medicationService.getMedicationsForDate(dateString);
   }
 
+  // Method to get medication status from logs
+  Future<Map<String, dynamic>> _getMedicationStatus(String medicationId, String date, String time) async {
+    try {
+      if (_currentUserId == null) return {'status': 'not_taken', 'data': null};
+
+      // Query medication logs for this specific medication, date, and time
+      // Note: We need to order by timestamp fields, but Firestore requires all ordered fields to exist
+      final QuerySnapshot logs = await FirebaseFirestore.instance
+          .collection('medication_logs')
+          .where('medicationId', isEqualTo: medicationId)
+          .where('userId', isEqualTo: _currentUserId)
+          .limit(10) // Get recent logs
+          .get();
+
+      if (logs.docs.isEmpty) {
+        return {'status': 'not_taken', 'data': null};
+      }
+
+      // Sort logs by most recent timestamp manually
+      final sortedLogs = logs.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        Timestamp? timestamp;
+        
+        if (data['takenAt'] != null) {
+          timestamp = data['takenAt'] as Timestamp;
+        } else if (data['snoozedAt'] != null) {
+          timestamp = data['snoozedAt'] as Timestamp;
+        } else if (data['skippedAt'] != null) {
+          timestamp = data['skippedAt'] as Timestamp;
+        }
+        
+        return {'doc': doc, 'data': data, 'timestamp': timestamp};
+      }).toList();
+
+      // Sort by timestamp descending (most recent first)
+      sortedLogs.sort((a, b) {
+        final aTime = a['timestamp'] as Timestamp?;
+        final bTime = b['timestamp'] as Timestamp?;
+        if (aTime == null && bTime == null) return 0;
+        if (aTime == null) return 1;
+        if (bTime == null) return -1;
+        return bTime.compareTo(aTime);
+      });
+
+      if (sortedLogs.isEmpty) {
+        return {'status': 'not_taken', 'data': null};
+      }
+
+      final logData = sortedLogs.first['data'] as Map<String, dynamic>;
+      final status = logData['status'] ?? 'not_taken';
+      
+      // For snoozed medications, check if snooze period has ended
+      if (status == 'snoozed') {
+        final snoozedAt = logData['snoozedAt'] as Timestamp?;
+        final snoozeMinutes = logData['snoozeMinutes'] as int? ?? 0;
+        
+        if (snoozedAt != null) {
+          final snoozedTime = snoozedAt.toDate();
+          final snoozeEndTime = snoozedTime.add(Duration(minutes: snoozeMinutes));
+          final now = DateTime.now();
+          
+          if (now.isAfter(snoozeEndTime)) {
+            return {'status': 'not_taken', 'data': logData}; // Snooze period ended
+          } else {
+            final remainingMinutes = snoozeEndTime.difference(now).inMinutes;
+            return {'status': 'snoozed', 'data': logData, 'remainingMinutes': remainingMinutes};
+          }
+        }
+      }
+      
+      return {'status': status, 'data': logData};
+    } catch (e) {
+      print('Error getting medication status: $e');
+      return {'status': 'not_taken', 'data': null};
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -232,7 +309,7 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     );
   }
 
-  // Enhanced medication card with TEST ALARM button
+  // Enhanced medication card with status indicators
   Widget _buildMedicationCard(MedicationModel medication) {
     final medicationName = medication.name;
     final dosage = medication.dosage;
@@ -242,155 +319,261 @@ class _Medication_WidgetState extends State<Medication_Widget> {
       'time': medication.time,
     });
 
-    return Card(
-      margin: EdgeInsets.only(bottom: 12),
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _getMedicationStatus(
+        medication.id ?? '',
+        medication.date,
+        medication.time,
+      ),
+      builder: (context, statusSnapshot) {
+        final statusData = statusSnapshot.data ?? {'status': 'not_taken'};
+        final status = statusData['status'] as String;
+        final isTaken = status == 'taken';
+        final isSkipped = status == 'skipped';
+        
+        return Card(
+          margin: EdgeInsets.only(bottom: 12),
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          color: isTaken ? Colors.grey[50] : null,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.medication,
-                  color: isDueNow ? Colors.red : Colors.deepPurple,
-                  size: 24,
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    medicationName,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDueNow
-                          ? Colors.red[900]
-                          : Colors.deepPurple[900],
+                Row(
+                  children: [
+                    Icon(
+                      isTaken ? Icons.medication_liquid : Icons.medication,
+                      color: isTaken 
+                        ? Colors.green 
+                        : isSkipped 
+                          ? Colors.red
+                          : isDueNow 
+                            ? Colors.red 
+                            : Colors.deepPurple,
+                      size: 24,
                     ),
-                  ),
-                ),
-                if (isDueNow)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(12),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            medicationName,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isTaken 
+                                ? Colors.grey[600]
+                                : isDueNow
+                                  ? Colors.red[900]
+                                  : Colors.deepPurple[900],
+                              decoration: isTaken ? TextDecoration.lineThrough : null,
+                            ),
+                          ),
+                          // Medication Status Indicator
+                          if (statusSnapshot.hasData) ...[
+                            SizedBox(height: 4),
+                            if (status == 'taken')
+                              Row(
+                                children: [
+                                  Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Taken ✓',
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else if (status == 'snoozed')
+                              Row(
+                                children: [
+                                  Icon(Icons.snooze, color: Colors.orange, size: 16),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Snoozed for ${statusData['remainingMinutes'] ?? 0}min',
+                                    style: TextStyle(
+                                      color: Colors.orange,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else if (status == 'skipped')
+                              Row(
+                                children: [
+                                  Icon(Icons.cancel, color: Colors.red, size: 16),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Skipped',
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              Row(
+                                children: [
+                                  Icon(Icons.schedule, color: Colors.grey, size: 16),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Not yet taken',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ],
+                      ),
                     ),
-                    child: Text(
-                      'DUE NOW!',
+                    if (isDueNow && !isTaken)
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'DUE NOW!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      onSelected: (value) =>
+                          _handleMenuAction(value, medication.id ?? '', {
+                            'name': medication.name,
+                            'dosage': medication.dosage,
+                            'date': medication.date,
+                            'time': medication.time,
+                            'userId': medication.userId,
+                          }),
+                      itemBuilder: (context) => [
+                        if (!isTaken) // Only show "Mark as Taken" if not already taken
+                          PopupMenuItem(
+                            value: 'mark_taken',
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green),
+                                SizedBox(width: 8),
+                                Text('Mark as Taken'),
+                              ],
+                            ),
+                          ),
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit, color: Colors.deepPurple),
+                              SizedBox(width: 8),
+                              Text('Edit'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Delete'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+
+                // Medication Details
+                Row(
+                  children: [
+                    Icon(Icons.science, color: Colors.blue, size: 18),
+                    SizedBox(width: 4),
+                    Text(
+                      'Dosage: $dosage',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  onSelected: (value) =>
-                      _handleMenuAction(value, medication.id ?? '', {
-                        'name': medication.name,
-                        'dosage': medication.dosage,
-                        'date': medication.date,
-                        'time': medication.time,
-                      }),
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, color: Colors.deepPurple),
-                          SizedBox(width: 8),
-                          Text('Edit'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Delete'),
-                        ],
+                        color: isTaken ? Colors.grey[500] : Colors.blue,
+                        fontWeight: FontWeight.w500,
+                        decoration: isTaken ? TextDecoration.lineThrough : null,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-            SizedBox(height: 12),
 
-            // Medication Details
-            Row(
-              children: [
-                Icon(Icons.science, color: Colors.blue, size: 18),
-                SizedBox(width: 4),
-                Text(
-                  'Dosage: $dosage',
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.w500,
+                // Time Info
+                if (time.isNotEmpty)
+                  Row(
+                    children: [
+                      Icon(Icons.schedule, color: Colors.teal, size: 18),
+                      SizedBox(width: 4),
+                      Text(
+                        'Time: ${MedicationAlarmHelper.formatTimeForDisplay(time)}',
+                        style: TextStyle(
+                          color: isTaken ? Colors.grey[500] : Colors.teal,
+                          fontWeight: FontWeight.w500,
+                          decoration: isTaken ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                    ],
                   ),
+
+                SizedBox(height: 16),
+
+                // Action Buttons Row
+                Row(
+                  children: [
+                    if (isDueNow && !isTaken)
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _triggerAlarmNow(medication.id ?? '', {
+                            'name': medication.name,
+                            'dosage': medication.dosage,
+                            'date': medication.date,
+                            'time': medication.time,
+                            'userId': medication.userId,
+                          }),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text('TAKE NOW'),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
-
-            // Time Info
-            if (time.isNotEmpty)
-              Row(
-                children: [
-                  Icon(Icons.schedule, color: Colors.teal, size: 18),
-                  SizedBox(width: 4),
-                  Text(
-                    'Time: ${MedicationAlarmHelper.formatTimeForDisplay(time)}',
-                    style: TextStyle(
-                      color: Colors.teal,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-
-            SizedBox(height: 16),
-
-            // Action Buttons Row
-            Row(
-              children: [
-                if (isDueNow)
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _triggerAlarmNow(medication.id ?? '', {
-                        'name': medication.name,
-                        'dosage': medication.dosage,
-                        'date': medication.date,
-                        'time': medication.time,
-                      }),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text('TAKE NOW'),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
-  }
-
-  // Trigger alarm for due medication
+  }  // Trigger alarm for due medication
   void _triggerAlarmNow(
     String medicationId,
     Map<String, dynamic> medicationData,
@@ -408,12 +591,68 @@ class _Medication_WidgetState extends State<Medication_Widget> {
     Map<String, dynamic> medicationData,
   ) async {
     switch (action) {
+      case 'mark_taken':
+        await _markMedicationAsTaken(medicationId, medicationData);
+        break;
       case 'edit':
         await _showEditMedicationDialog(medicationId, medicationData);
         break;
       case 'delete':
         await _showDeleteConfirmation(medicationId);
         break;
+    }
+  }
+
+  // Mark medication as taken
+  Future<void> _markMedicationAsTaken(
+    String medicationId,
+    Map<String, dynamic> medicationData,
+  ) async {
+    try {
+      // Get the current user ID as fallback
+      final currentUserId = authService.value.currentUser?.uid;
+      final userId = medicationData['userId'] ?? currentUserId;
+      
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Cannot mark medication as taken: User not logged in'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      await FirebaseFirestore.instance.collection('medication_logs').add({
+        'medicationId': medicationId,
+        'medicationName': medicationData['name'],
+        'dosage': medicationData['dosage'],
+        'scheduledTime': medicationData['time'],
+        'takenAt': FieldValue.serverTimestamp(),
+        'status': 'taken',
+        'userId': userId,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ ${medicationData['name']} marked as taken!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Trigger a rebuild to show the updated status
+      setState(() {});
+      
+      print('✅ Medication marked as taken: ${medicationData['name']}');
+    } catch (e) {
+      print('❌ Error marking medication as taken: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to mark medication as taken. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
